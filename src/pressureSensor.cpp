@@ -25,7 +25,7 @@ namespace measure_h2o
     float pressureBar = 0.0;
     auto miliVolt = analogReadMilliVolts( pin ) - calibrMinVal;
     pressureBar = ( miliVolt / 1000.0 ) * calibrFactor;
-    if ( pressureBar < 0.0F )
+    if ( pressureBar < 0.0F || pressureBar > 6.0 )
       return 0.0F;
     return pressureBar;
   }
