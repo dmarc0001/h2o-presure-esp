@@ -6,8 +6,6 @@ namespace measure_h2o
   Elog elog;
   // les stripe
   ledObjPtr mLED{ nullptr };
-  // pressure sensor
-  pressureObjePtr prSensor;
   // system display
   sysDisplay display;
 

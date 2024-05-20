@@ -9,6 +9,5 @@ namespace measure_h2o
 {
   extern ledObjPtr mLED;
   extern Elog elog;
-  extern pressureObjePtr prSensor;
   extern sysDisplay display;
 }  // namespace measure_h2o

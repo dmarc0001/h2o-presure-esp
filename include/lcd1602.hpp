@@ -9,9 +9,19 @@ namespace measure_h2o
   {
     private:
     static const char *tag;
+    bool printedPresureTitle;
+    bool printedTension;
+    bool showMeasureMark;
+    float lastPressure;
+    float lastTension;
 
     public:
     MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
+    void printPresure( float );
+    void printTension( float );
+    void printHartbeat();
+    void printMeasureMark();
+    void hideMeasureMark();
   };
 
   using sysDisplay = std::shared_ptr< MLCD >;

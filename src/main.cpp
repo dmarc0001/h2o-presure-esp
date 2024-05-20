@@ -25,7 +25,7 @@ void setup()
   mLED->setBrightness( 128 );  // Set BRIGHTNESS  (max = 255)
   // start analog reader
   elog.log( INFO, "main: init preasure measure..." );
-  prSensor = std::make_shared< PrSensor >( prefs::PRESSURE_GPIO, ADC_11db, prefs::PRESSURE_RES );
+  PrSensor::init();
   // display init
   elog.log( INFO, "waveshare init..." );
   display = std::make_shared< MLCD >( prefs::DISPLAY_COLS, prefs::DISPLAY_ROWS, prefs::DISPLAY_SDA, prefs::DOSPLAY_SCL );
@@ -39,16 +39,11 @@ void setup()
   randomSeed( analogRead( 1 ) );
   sleep( 3 );
   display->clear();
-  display->setCursor( 0, 0 );
-  display->send_string( "Spng: " );
-  display->setCursor( 0, 1 );
-  display->send_string( "Druck:      bar" );
 }
 
 void loop()
 {
   using namespace measure_h2o;
-  static bool beat{ false };
   mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
   uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
   uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
@@ -63,28 +58,17 @@ void loop()
   //
   // read analog raw
   //
-  uint32_t mVolt = prSensor->getMilivolts();
+  uint32_t mVolt = PrSensor::getMilivolts();
   float volt = mVolt / 1000.0f;
-  delay( 200 );
-  float pressureBar = prSensor->getPressureBar();
+  float pressureBar = PrSensor::getPressureBar();
   elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
-  display->setCursor( 6, 0 );
-  char buffer[ 16 ];
-  snprintf( buffer, 6, "%1.2f V", volt );
-  display->send_string( buffer );
-  snprintf( buffer, 5, "%1.2f", pressureBar );
-  display->setCursor( 7, 1 );
-  display->send_string( buffer );
+  //
+  display->printTension( volt );
+  display->printPresure( pressureBar );
   //
   // hartbeat
   //
-  display->setCursor( 15, 0 );
-  if ( beat )
-    display->write_char( '*' );
-  else
-    display->write_char( '-' );
-  beat = !beat;
-
+  display->printHartbeat();
   //
   delay( 1000 );
 }
