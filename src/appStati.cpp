@@ -26,6 +26,7 @@ namespace prefs
   double AppPrefs::calibreFactor{ -10.0 };
   uint32_t AppPrefs::currentMiliVolts{ 0 };
   float AppPrefs::currentPressureBar{ 0.0F };
+  volatile bool AppPrefs::presureWasChanged{ true };
 
   void AppPrefs::init()
   {
@@ -104,12 +105,25 @@ namespace prefs
 
   void AppPrefs::setCurrentMiliVolts( uint32_t _val )
   {
-    AppPrefs::currentMiliVolts = _val;
+    if ( AppPrefs::currentMiliVolts != _val )
+    {
+      AppPrefs::currentMiliVolts = _val;
+      // presureWasChanged = true;
+    }
   }
 
   void AppPrefs::setCurrentPressureBar( float _val )
   {
-    AppPrefs::currentPressureBar = _val;
+    //
+    // https://stackoverflow.com/questions/14369673/round-double-to-3-points-decimal
+    //  number 60, thanks!
+    //
+    float val = std::round( _val / 0.01 ) * 0.01;
+    if ( AppPrefs::currentPressureBar != val )
+    {
+      AppPrefs::currentPressureBar = val;
+      presureWasChanged = true;
+    }
   }
 
   /**

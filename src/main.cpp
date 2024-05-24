@@ -148,15 +148,19 @@ void loop()
     mLED->setPixelColor( 0, 0x0 );
     mLED->show();
     //
-    // read analog raw
+    // read measure values if changed
     //
-    uint32_t mVolt = prefs::AppPrefs::getCurrentMiliVolts();
-    float volt = mVolt / 1000.0f;
-    float pressureBar = prefs::AppPrefs::getCurrentPressureBar();
-    elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
-    //
-    display->printTension( volt );
-    display->printPresure( pressureBar );
+    if ( prefs::AppPrefs::getWasChanged() )
+    {
+      uint32_t mVolt = prefs::AppPrefs::getCurrentMiliVolts();
+      float volt = mVolt / 1000.0f;
+      float pressureBar = prefs::AppPrefs::getCurrentPressureBar();
+      elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
+      //
+      display->printTension( volt );
+      display->printPresure( pressureBar );
+      prefs::AppPrefs::resetWasChanged();
+    }
   }
   //
   // hartbeat
