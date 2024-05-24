@@ -11,14 +11,15 @@ namespace measure_h2o
   class PrSensor
   {
     private:
-    static const char *tag;            //! Tag for debug and messages
-    static gpio_num_t pin;             //! gpio pin
-    static uint32_t calibrMinVal;      //! minimal value by calibr
-    static uint32_t calibrMaxVal;      //! maximal value by calibr
-    static double calibrFactor;        //! computed linear factor
-    static TaskHandle_t taskHandle;    //! only one times
-    static uint32_t currentMiliVolts;  //! current measured value
-    static float currentPressureBar;   //! current measured value
+    static const char *tag;                 //! Tag for debug and messages
+    static gpio_num_t pin;                  //! gpio pin
+    static uint32_t calibreMinVal;          //! minimal value by calibr
+    static uint32_t calibreMaxVal;          //! maximal value by calibr
+    static double calibreFactor;            //! computed linear factor
+    static TaskHandle_t taskHandle;         //! only one times
+    static uint32_t currentMiliVolts;       //! current measured value
+    static float currentPressureBar;        //! current measured value
+    static volatile bool pauseMeasureTask;  //! if i make an calibration, pause task
 
     public:
     static void init();
@@ -34,13 +35,15 @@ namespace measure_h2o
 
     static uint16_t getMinPresureValue()
     {
-      return calibrMinVal;
+      return calibreMinVal;
     }
-    static double getCalibrFactor();
+    static double getCalibreFactor();
+    static bool calibreSensor();
 
     private:
     static void start();          //! start measure thread
     static void mTask( void * );  //! the task fir LED
+    static void doMeasure();      //! make a measure
   };
 
   using pressureObjePtr = std::shared_ptr< PrSensor >;

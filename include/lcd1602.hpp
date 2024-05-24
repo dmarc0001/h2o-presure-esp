@@ -11,6 +11,8 @@ namespace measure_h2o
     static const char *tag;
     bool printedPresureTitle;
     bool printedTension;
+    bool printedAlert;
+    bool printedMessage;
     bool showMeasureMark;
     float lastPressure;
     float lastTension;
@@ -22,6 +24,8 @@ namespace measure_h2o
     void printHartbeat();
     void printMeasureMark();
     void hideMeasureMark();
+    void printAlert( String & );
+    void printMessage( String & );
   };
 
   using sysDisplay = std::shared_ptr< MLCD >;

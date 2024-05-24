@@ -11,6 +11,10 @@
 #include "statics.hpp"
 #include "main.hpp"
 
+constexpr uint64_t DELAYTIME = 750000ULL;
+constexpr uint64_t HARTBEATTIME = 400000ULL;
+constexpr uint64_t CALIBRTIME = 255000ULL;
+
 void setup()
 {
   using namespace measure_h2o;
@@ -33,42 +37,133 @@ void setup()
   display->setCursor( 0, 0 );
   display->send_string( "WASSERDRUCK APP" );
   display->setCursor( 0, 1 );
-  display->send_string( "S T A R T ..." );
-
+  display->send_string( "   S T A R T    " );
+  //
+  // watch for calibrating request
+  //
+  pinMode( static_cast< uint8_t >( prefs::CALIBR_REQ_PIN ), INPUT_PULLUP );
+  //
   //  random init
-  randomSeed( analogRead( 1 ) );
+  //
+  randomSeed( analogRead( prefs::RAND_PIN ) );
   sleep( 3 );
   display->clear();
 }
 
 void loop()
 {
-  using namespace measure_h2o;
-  mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
-  uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
-  uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
-  uint8_t blue = static_cast< uint8_t >( 0xff & random( 255 ) );
+  static uint64_t nextTimeToShowPresure = DELAYTIME;
+  static uint64_t nextTimeHartbeat = HARTBEATTIME;
+  static uint64_t nextTimeCalibrCheck = CALIBRTIME;
+  uint64_t nowTime = esp_timer_get_time();
 
-  // elog.log( DEBUG, "main: <r:%03d>, <g:%03d>, <b:%03d>", red, green, blue );
-  mLED->setPixelColor( 0, mLED->Color( red, green, blue ) );
-  mLED->show();
-  delay( 150 );
-  mLED->setPixelColor( 0, 0x0 );
-  mLED->show();
-  //
-  // read analog raw
-  //
-  uint32_t mVolt = PrSensor::getMilivolts();
-  float volt = mVolt / 1000.0f;
-  float pressureBar = PrSensor::getPressureBar();
-  elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
-  //
-  display->printTension( volt );
-  display->printPresure( pressureBar );
+  using namespace measure_h2o;
+
+  if ( nowTime > nextTimeCalibrCheck )
+  {
+    //
+    // time to check if the master whish to calibre
+    //
+    nextTimeCalibrCheck = nowTime + CALIBRTIME;
+    auto cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
+    if ( cl_switch == LOW )
+    {
+      //
+      // there was an low impulse, is this permanent
+      //
+      elog.log( DEBUG, "main: Calibr requested???" );
+      delay( 20 );
+      //
+      // after that, always low?
+      //
+      cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
+      if ( cl_switch == LOW )
+      {
+        String msg( "Druck erkannt!" );
+        String nix( "nicht moeglich" );
+        // maybe i can calibr?
+        elog.log( DEBUG, "main: Calibr requested!" );
+        // is ther a preasure in the sensor?
+        if ( prefs::CURRENT_BORDER_FOR_CALIBR < PrSensor::getMilivolts() )
+        {
+          display->printAlert( msg );
+          delay( 2000 );
+          while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
+          {
+            display->printAlert( nix );
+            delay( 800 );
+            display->printAlert( msg );
+            delay( 1000 );
+          }
+          nextTimeCalibrCheck = nowTime + 10000000ULL;
+        }
+        else
+        {
+          //
+          // i should calibr the device
+          //
+          elog.log( DEBUG, "main: call calibre routine..." );
+          String msg( "calibriere..." );
+          display->printMessage( msg );
+          PrSensor::calibreSensor();
+          msg = "fertig...       ";
+          display->printMessage( msg );
+          elog.log( DEBUG, "main: call calibre routine...done" );
+          elog.log( INFO, "calibre routine done" );
+          elog.log( DEBUG, "main: calibre factor: <%02.5f>", static_cast< float >( PrSensor::getCalibreFactor() ) );
+          while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
+          {
+            delay( 100 );
+            taskYIELD();
+          }
+          elog.log( DEBUG, "main: continue" );
+        }
+      }
+    }
+  }
+
+  if ( nowTime > nextTimeToShowPresure )
+  {
+    //
+    // lets actualize the preasure display
+    //
+    nextTimeToShowPresure = nowTime + DELAYTIME;
+    //
+    // DEMONSTRATION ONLY, IMPLEMENT LATER
+    //
+    uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
+    uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
+    uint8_t blue = static_cast< uint8_t >( 0xff & random( 255 ) );
+    mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
+    mLED->setPixelColor( 0, mLED->Color( red, green, blue ) );
+    mLED->show();
+    delay( 150 );
+    mLED->setPixelColor( 0, 0x0 );
+    mLED->show();
+    //
+    // read analog raw
+    //
+    uint32_t mVolt = PrSensor::getMilivolts();
+    float volt = mVolt / 1000.0f;
+    float pressureBar = PrSensor::getPressureBar();
+    elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
+    //
+    display->printTension( volt );
+    display->printPresure( pressureBar );
+  }
   //
   // hartbeat
   //
-  display->printHartbeat();
+  if ( nowTime > nextTimeHartbeat )
+  {
+    //
+    // lets show the heartbeat
+    //
+    nextTimeHartbeat = nowTime + HARTBEATTIME;
+    //
+    // hartbeat
+    //
+    display->printHartbeat();
+  }
   //
-  delay( 450 );
 }
