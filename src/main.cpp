@@ -28,7 +28,7 @@ void setup()
   PrSensor::init();
   // display init
   elog.log( INFO, "waveshare init..." );
-  display = std::make_shared< MLCD >( prefs::DISPLAY_COLS, prefs::DISPLAY_ROWS, prefs::DISPLAY_SDA, prefs::DOSPLAY_SCL );
+  display = std::make_shared< MLCD >( prefs::DISPLAY_COLS, prefs::DISPLAY_ROWS, prefs::DISPLAY_SDA_PIN, prefs::DOSPLAY_SCL_PIN );
   display->init();
   display->setCursor( 0, 0 );
   display->send_string( "WASSERDRUCK APP" );
