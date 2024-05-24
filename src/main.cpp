@@ -13,6 +13,7 @@
 #include "main.hpp"
 
 constexpr uint64_t DELAYTIME = 750000ULL;
+constexpr uint64_t FORCE_DELAYTIME = 10000000ULL;
 constexpr uint64_t HARTBEATTIME = 400000ULL;
 constexpr uint64_t CALIBRTIME = 255000ULL;
 
@@ -23,7 +24,7 @@ void setup()
   // Debug Ausgabe init
   Serial.begin( 115200 );
   Serial.println( "main: program started..." );
-  sleep( 5 );
+  // sleep( 5 );
   elog.addSerialLogging( Serial, "GLO", DEBUG );  // Enable serial logging. We want only INFO or lower logleve.
   elog.log( INFO, "main: start with logging..." );
   elog.log( INFO, "main: init LEDSTRIPE..." );
@@ -60,6 +61,7 @@ void setup()
 
 void loop()
 {
+  static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
   static uint64_t nextTimeToShowPresure = DELAYTIME;
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
@@ -150,7 +152,7 @@ void loop()
     //
     // read measure values if changed
     //
-    if ( prefs::AppPrefs::getWasChanged() )
+    if ( prefs::AppPrefs::getWasChanged() || nowTime > nextTimeToForceShowPresure )
     {
       uint32_t mVolt = prefs::AppPrefs::getCurrentMiliVolts();
       float volt = mVolt / 1000.0f;
@@ -160,6 +162,8 @@ void loop()
       display->printTension( volt );
       display->printPresure( pressureBar );
       prefs::AppPrefs::resetWasChanged();
+      // ever all this time
+      nextTimeToForceShowPresure = nowTime + FORCE_DELAYTIME;
     }
   }
   //
