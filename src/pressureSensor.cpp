@@ -1,16 +1,13 @@
 #include <Arduino.h>
 #include "statics.hpp"
 #include "pressureSensor.hpp"
+#include "appPrefs.hpp"
+#include "appStati.hpp"
 
 namespace measure_h2o
 {
   const char *PrSensor::tag{ "PrSensor" };
-  gpio_num_t PrSensor::pin{ prefs::PRESSURE_GPIO };
-  uint32_t PrSensor::calibreMinVal{ prefs::PRESSURE_MIN_MILIVOLT };
-  uint32_t PrSensor::calibreMaxVal{ prefs::PRESSURE_MAX_MILIVOLT };
-  double PrSensor::calibreFactor{ prefs::PRESSURE_CALIBR_VALUE };
-  uint32_t PrSensor::currentMiliVolts{ 0 };
-  float PrSensor::currentPressureBar{ 0.0F };
+  gpio_num_t PrSensor::adcPin{ prefs::PRESSURE_GPIO };
   volatile bool PrSensor::pauseMeasureTask{ false };
 
   TaskHandle_t PrSensor::taskHandle{ nullptr };
@@ -18,17 +15,12 @@ namespace measure_h2o
   void PrSensor::init()
   {
     elog.log( DEBUG, "%s: init pressure measure object...", PrSensor::tag );
-    pinMode( PrSensor::pin, INPUT );
-    adcAttachPin( PrSensor::pin );
+    pinMode( PrSensor::adcPin, INPUT );
+    adcAttachPin( PrSensor::adcPin );
     analogSetAttenuation( ADC_11db );
     analogReadResolution( prefs::PRESSURE_RES );
     PrSensor::start();
     elog.log( DEBUG, "%s: init pressure measure object...OK", PrSensor::tag );
-  }
-
-  double PrSensor::getCalibreFactor()
-  {
-    return PrSensor::calibreFactor;
   }
 
   void PrSensor::start()
@@ -63,7 +55,7 @@ namespace measure_h2o
     //
     // set min volt == measured value
     //
-    PrSensor::calibreMinVal = PrSensor::currentMiliVolts;
+    prefs::AppPrefs::setCalibreMinVal( prefs::AppPrefs::getCurrentMiliVolts() );
     //
     // compute calibre factor
     //
@@ -88,10 +80,16 @@ namespace measure_h2o
       delay( 10 );
     }
     // average minus bias
-    PrSensor::currentMiliVolts = ( readValuesSum >> 3 );
-    PrSensor::currentPressureBar = ( ( PrSensor::currentMiliVolts - PrSensor::calibreMinVal ) / 1000.0 ) * PrSensor::calibreFactor;
-    if ( PrSensor::currentPressureBar < 0.0F || PrSensor::currentPressureBar > 6.0 )
-      PrSensor::currentPressureBar = 0.0F;
+    uint32_t cMiliVolts = ( readValuesSum >> 3 );
+    prefs::AppPrefs::setCurrentMiliVolts( cMiliVolts );
+    double volts = ( cMiliVolts - prefs::AppPrefs::getCalibreMinVal() ) / 1000.0;
+    elog.log( DEBUG, "%s: current: <%02.2fV> - factor <%02.5f>", PrSensor::tag, static_cast< float >( volts ),
+              static_cast< float >( prefs::AppPrefs::getCalibreFactor() ) );
+    float cBar = volts * prefs::AppPrefs::getCalibreFactor();
+    if ( cBar < 0.0F || cBar > 6.0F )
+      prefs::AppPrefs::setCurrentPressureBar( 0.0F );
+    else
+      prefs::AppPrefs::setCurrentPressureBar( cBar );
   }
 
   void PrSensor::mTask( void * )

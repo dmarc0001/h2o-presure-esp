@@ -7,6 +7,7 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 #include <Elog.h>
+#include "appStati.hpp"
 #include "appPrefs.hpp"
 #include "statics.hpp"
 #include "main.hpp"
@@ -22,9 +23,16 @@ void setup()
   // Debug Ausgabe init
   Serial.begin( 115200 );
   Serial.println( "main: program started..." );
+  sleep( 5 );
   elog.addSerialLogging( Serial, "GLO", DEBUG );  // Enable serial logging. We want only INFO or lower logleve.
   elog.log( INFO, "main: start with logging..." );
   elog.log( INFO, "main: init LEDSTRIPE..." );
+  //
+  // first appstati object init
+  //
+  elog.log( INFO, "main: init preferences..." );
+  prefs::AppPrefs::init();
+  //
   mLED = std::make_shared< MLED >( prefs::LED_NUM, prefs::LED_INTERNAL, NEO_GRB + NEO_KHZ800 );
   mLED->setBrightness( 128 );  // Set BRIGHTNESS  (max = 255)
   // start analog reader
@@ -34,10 +42,10 @@ void setup()
   elog.log( INFO, "waveshare init..." );
   display = std::make_shared< MLCD >( prefs::DISPLAY_COLS, prefs::DISPLAY_ROWS, prefs::DISPLAY_SDA_PIN, prefs::DOSPLAY_SCL_PIN );
   display->init();
-  display->setCursor( 0, 0 );
-  display->send_string( "WASSERDRUCK APP" );
-  display->setCursor( 0, 1 );
-  display->send_string( "   S T A R T    " );
+  // display->setCursor( 0, 0 );
+  // display->send_string( "WASSERDRUCK APP" );
+  // display->setCursor( 0, 1 );
+  // display->send_string( "   S T A R T    " );
   //
   // watch for calibrating request
   //
@@ -84,7 +92,7 @@ void loop()
         // maybe i can calibr?
         elog.log( DEBUG, "main: Calibr requested!" );
         // is ther a preasure in the sensor?
-        if ( prefs::CURRENT_BORDER_FOR_CALIBR < PrSensor::getMilivolts() )
+        if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppPrefs::getCurrentMiliVolts() )
         {
           display->printAlert( msg );
           delay( 2000 );
@@ -110,7 +118,6 @@ void loop()
           display->printMessage( msg );
           elog.log( DEBUG, "main: call calibre routine...done" );
           elog.log( INFO, "calibre routine done" );
-          elog.log( DEBUG, "main: calibre factor: <%02.5f>", static_cast< float >( PrSensor::getCalibreFactor() ) );
           while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
           {
             delay( 100 );
@@ -143,9 +150,9 @@ void loop()
     //
     // read analog raw
     //
-    uint32_t mVolt = PrSensor::getMilivolts();
+    uint32_t mVolt = prefs::AppPrefs::getCurrentMiliVolts();
     float volt = mVolt / 1000.0f;
-    float pressureBar = PrSensor::getPressureBar();
+    float pressureBar = prefs::AppPrefs::getCurrentPressureBar();
     elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
     //
     display->printTension( volt );

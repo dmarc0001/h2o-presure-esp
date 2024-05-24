@@ -18,6 +18,15 @@ namespace measure_h2o
     Wire.setPins( _sda, _scl );
   }
 
+  void MLCD::init()
+  {
+    Waveshare_LCD1602::init();
+    this->setCursor( 0, 0 );
+    this->send_string( "WASSERDRUCK APP" );
+    this->setCursor( 0, 1 );
+    this->send_string( "   S T A R T    " );
+  }
+
   void MLCD::printPresure( float _pressureBar )
   {
     if ( !printedPresureTitle )

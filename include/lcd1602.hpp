@@ -19,6 +19,7 @@ namespace measure_h2o
 
     public:
     MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
+    void init();
     void printPresure( float );
     void printTension( float );
     void printHartbeat();
