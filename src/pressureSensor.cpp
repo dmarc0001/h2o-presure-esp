@@ -69,7 +69,7 @@ namespace measure_h2o
         {
           // read value
           readValuesSum += analogReadMilliVolts( prefs::PRESSURE_GPIO );
-          delay( 20 );
+          delay( 10 );
         }
         // average minus bias
         PrSensor::currentMiliVolts = ( readValuesSum >> 3 );

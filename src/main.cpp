@@ -70,5 +70,5 @@ void loop()
   //
   display->printHartbeat();
   //
-  delay( 1000 );
+  delay( 450 );
 }

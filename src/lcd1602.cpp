@@ -56,7 +56,7 @@ namespace measure_h2o
       return;
     this->setCursor( 15, 0 );
     if ( beat )
-      this->write_char( '*' );
+      this->write_char( '|' );
     else
       this->write_char( '-' );
     beat = !beat;
