@@ -28,10 +28,6 @@ namespace measure_h2o
 
   double PrSensor::getCalibreFactor()
   {
-    // auto rawMaxVal = PrSensor::calibreMaxVal - PrSensor::calibreMinVal;
-    // auto maxMilivolt = prefs::PRESSURE_MAX_MILIVOLT - prefs::PRESSURE_MIN_MILIVOLT;
-
-    // PrSensor::calibreFactor = static_cast< double >( maxMilivolt / rawMaxVal );
     return PrSensor::calibreFactor;
   }
 
@@ -71,7 +67,7 @@ namespace measure_h2o
     //
     // compute calibre factor
     //
-    //PrSensor::getCalibreFactor();
+    // PrSensor::getCalibreFactor();
     //
     PrSensor::pauseMeasureTask = false;
     taskYIELD();
