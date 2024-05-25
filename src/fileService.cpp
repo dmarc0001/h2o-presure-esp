@@ -184,7 +184,7 @@ namespace measure_h2o
         // store in Vector
         //
         String matchedFileName( fname.c_str() );
-        elog.log( DEBUG, "%s: +++ found file who match <%s>", FileService::tag, fname.c_str() );
+        // elog.log( DEBUG, "%s: +++ found file who match <%s>", FileService::tag, fname.c_str() );
         fileList.push_back( matchedFileName );
       }
       fname = root.getNextFileName().c_str();
@@ -211,7 +211,7 @@ namespace measure_h2o
       // make from filename a dateTime
       //
       String nameShort = fileName.substring( prefix, prefix + 10 );
-      elog.log( DEBUG, "%s: check file <%s>", FileService::tag, nameShort.c_str() );
+      // elog.log( DEBUG, "%s: check file <%s>", FileService::tag, nameShort.c_str() );
       time_t fYear = nameShort.substring( 0, 4 ).toInt();
       time_t fMonth = nameShort.substring( 5, 7 ).toInt();
       time_t fDay = nameShort.substring( 8, 10 ).toInt();
@@ -236,10 +236,10 @@ namespace measure_h2o
       if ( std::abs( currentTimeStamp - fileTimeStamp ) > prefs::MAX_DATA_FILE_AGE_SEC )
       {
         elog.log( INFO, "%s: file <%s> is too old, delete it!", FileService::tag, nameShort.c_str() );
+        SPIFFS.remove( fileName );
       }
-      else
-        elog.log( DEBUG, "%s: file <%s> in range of age, do nothing.", FileService::tag, nameShort.c_str() );
-
+      // else
+      //   elog.log( DEBUG, "%s: file <%s> in range of age, do nothing.", FileService::tag, nameShort.c_str() );
       delay( 1 );
     }
     return 0;

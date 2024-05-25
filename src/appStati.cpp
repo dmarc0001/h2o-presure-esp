@@ -11,6 +11,7 @@ namespace prefs
   constexpr const char *INITVAL{ "wasInit" };
 
   constexpr const char *LOC_HOSTNAME{ "hostname" };
+  constexpr const char *LOC_TIMEZONE{ "timezone" };
   constexpr const char *CAL_MINVAL{ "cal_min" };
   constexpr const char *CAL_MAXVAL{ "cal_max" };
   constexpr const char *CAL_FACTOR{ "cal_factor" };
@@ -28,6 +29,7 @@ namespace prefs
   uint32_t AppStati::currentMiliVolts{ 0 };
   float AppStati::currentPressureBar{ 0.0F };
   volatile bool AppStati::presureWasChanged{ true };
+  WlanState AppStati::wlanState{ WlanState::DISCONNECTED };
 
   void AppStati::init()
   {
@@ -42,6 +44,7 @@ namespace prefs
       snprintf( hostname, 32, "%s-%08X", DEFAULT_HOSTNAME, chip );
       String hn( &hostname[ 0 ] );
       AppStati::lPref.putString( LOC_HOSTNAME, hn );
+      AppStati::lPref.putString( LOC_TIMEZONE, "GMT" );
       AppStati::lPref.putUInt( CAL_MINVAL, PRESSURE_MIN_MILIVOLT );
       AppStati::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
       AppStati::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
@@ -149,6 +152,22 @@ namespace prefs
     }
     // else remove the key, set the properties not valid
     return AppStati::lPref.remove( CHECKVAL );
+  }
+
+  /**
+   * get local timezone
+   */
+  String AppStati::getTimeZone()
+  {
+    return ( AppStati::lPref.getString( LOC_TIMEZONE, "GMT" ) );
+  }
+
+  /**
+   * set local timezone
+   */
+  bool AppStati::setTimeZone( String &_zone )
+  {
+    return ( AppStati::lPref.putString( LOC_TIMEZONE, _zone ) > 0 );
   }
 
 }  // namespace prefs

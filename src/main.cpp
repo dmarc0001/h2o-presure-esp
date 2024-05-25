@@ -7,10 +7,12 @@
 #include "freertos/task.h"
 #include "sdkconfig.h"
 #include <Elog.h>
+#include <TimeLib.h>
 #include "appStati.hpp"
 #include "appPrefs.hpp"
 #include "fileService.hpp"
 #include "statics.hpp"
+#include "wifiConfig.hpp"
 #include "main.hpp"
 
 constexpr uint64_t DELAYTIME = 750000ULL;
@@ -45,34 +47,72 @@ void setup()
   elog.log( INFO, "main: init preasure measure..." );
   PrSensor::init();
   // display init
-  elog.log( INFO, "waveshare init..." );
+  elog.log( INFO, "main: waveshare display init..." );
   display = std::make_shared< MLCD >( prefs::DISPLAY_COLS, prefs::DISPLAY_ROWS, prefs::DISPLAY_SDA_PIN, prefs::DOSPLAY_SCL_PIN );
   display->init();
-  // display->setCursor( 0, 0 );
-  // display->send_string( "WASSERDRUCK APP" );
-  // display->setCursor( 0, 1 );
-  // display->send_string( "   S T A R T    " );
   //
   // watch for calibrating request
   //
   pinMode( static_cast< uint8_t >( prefs::CALIBR_REQ_PIN ), INPUT_PULLUP );
   //
+  // WLAN/Networking init
+  //
+  elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
+  setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
+  tzset();
+  static String hName( prefs::AppStati::getHostName() );
+  elog.log( INFO, "main: hostname: <%s>...", hName.c_str() );
+  elog.log( DEBUG, "main: start wifi..." );
+  String msg( "init WIFI..." );
+  display->clear();
+  display->printMessage( msg );
+
+  WifiConfig::init();
+  //
   //  random init
   //
+  display->printGreeting();
   randomSeed( analogRead( prefs::RAND_PIN ) );
+  //
+  // timeLib sync Time width system
+  //
+  setSyncInterval( 240 );
+  setSyncProvider( getNtpTime );
   sleep( 3 );
   display->clear();
 }
 
 void loop()
 {
+  using namespace measure_h2o;
+
+  static uint64_t setNextTimeCorrect{ ( 1000ULL * 1000ULL * 21600ULL ) };
+  static auto connected = WlanState::DISCONNECTED;
   static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
   static uint64_t nextTimeToShowPresure = DELAYTIME;
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
   uint64_t nowTime = esp_timer_get_time();
 
-  using namespace measure_h2o;
+  if ( setNextTimeCorrect < nowTime )
+  {
+    //
+    // somtimes correct elog time
+    //
+    elog.log( DEBUG, "main: logger time correction..." );
+    setNextTimeCorrect = nowTime + ( 1000ULL * 1000ULL * 21600ULL );
+    struct tm ti;
+    if ( !getLocalTime( &ti ) )
+    {
+      elog.log( WARNING, "main: failed to obtain system time!" );
+    }
+    else
+    {
+      elog.log( DEBUG, "main: gotten system time!" );
+      Elog::provideTime( ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec );
+      elog.log( DEBUG, "main: logger time correction...OK" );
+    }
+  }
 
   if ( nowTime > nextTimeCalibrCheck )
   {
@@ -185,5 +225,15 @@ void loop()
     //
     display->printHartbeat();
   }
-  //
+}
+//
+time_t getNtpTime()
+{
+  struct tm ti;
+  if ( getLocalTime( &ti ) )
+  {
+    setTime( ti.tm_hour, ti.tm_min, ti.tm_sec, ti.tm_mday, ti.tm_mon + 1, ti.tm_year + 1900 );
+    return now();
+  }
+  return 0;
 }

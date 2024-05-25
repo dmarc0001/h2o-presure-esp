@@ -7,6 +7,16 @@
 namespace measure_h2o
 {
 
+  enum WlanState : uint8_t
+  {
+    DISCONNECTED,
+    SEARCHING,
+    CONNECTED,
+    TIMESYNCED,
+    FAILED
+  };
+
+
   struct presure_data_t
   {
     String timestamp;    //! timestamp

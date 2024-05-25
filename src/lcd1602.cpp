@@ -25,11 +25,16 @@ namespace measure_h2o
     uint8_t measure[ 8 ] = { 0x0e, 0x11, 0x15, 0x15, 0x15, 0x11, 0x0e, 0x00 };
     this->customSymbol( 0, backsl );
     this->customSymbol( 1, measure );
+    this->printGreeting();
+  }  // namespace measure_h2o
+
+  void MLCD::printGreeting()
+  {
     this->setCursor( 0, 0 );
     this->send_string( "WASSERDRUCK APP" );
     this->setCursor( 0, 1 );
     this->send_string( "   S T A R T    " );
-  }  // namespace measure_h2o
+  }
 
   void MLCD::printPresure( float _pressureBar )
   {

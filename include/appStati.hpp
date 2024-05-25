@@ -1,9 +1,12 @@
 #pragma once
 #include <Preferences.h>
 #include "appPrefs.hpp"
+#include "appStructs.hpp"
 
 namespace prefs
 {
+  using namespace measure_h2o;
+
   class AppStati
   {
     private:
@@ -17,6 +20,7 @@ namespace prefs
     static uint32_t currentMiliVolts;        //! current measured value
     static float currentPressureBar;         //! current measured value
     static volatile bool presureWasChanged;  //! was presure changed?
+    static WlanState wlanState;              //! is wlan disconnected, connected etc....
 
     public:
     static void init();
@@ -54,6 +58,16 @@ namespace prefs
     {
       AppStati::presureWasChanged = false;
     }
+    static void setWlanState( WlanState _state )
+    {
+      AppStati::wlanState = _state;
+    }
+    static WlanState getWlanState()
+    {
+      return AppStati::wlanState;
+    }
+    static String getTimeZone();          //! get my timezone
+    static bool setTimeZone( String & );  //! set my timezone
 
     private:
     static bool getIfPrefsInit();        //! internal, is preferences initialized?
