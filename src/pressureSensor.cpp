@@ -102,9 +102,10 @@ namespace measure_h2o
     {
       //
       // if an other process work here (i.e. calibre pressure)
+      // or there is no tiome availible
       // make a break ;-)
       //
-      while ( PrSensor::pauseMeasureTask )
+      while ( PrSensor::pauseMeasureTask || ( prefs::AppStati::getWlanState() != WlanState::TIMESYNCED ) )
         delay( 500U );
       //
       // normal task
