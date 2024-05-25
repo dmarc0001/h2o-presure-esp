@@ -9,6 +9,7 @@
 #include <Elog.h>
 #include "appStati.hpp"
 #include "appPrefs.hpp"
+#include "fileService.hpp"
 #include "statics.hpp"
 #include "main.hpp"
 
@@ -32,7 +33,11 @@ void setup()
   // first appstati object init
   //
   elog.log( INFO, "main: init preferences..." );
-  prefs::AppPrefs::init();
+  prefs::AppStati::init();
+  //
+  // file storage init
+  //
+  FileService::init();
   //
   mLED = std::make_shared< MLED >( prefs::LED_NUM, prefs::LED_INTERNAL, NEO_GRB + NEO_KHZ800 );
   mLED->setBrightness( 128 );  // Set BRIGHTNESS  (max = 255)
@@ -94,7 +99,7 @@ void loop()
         // maybe i can calibr?
         elog.log( DEBUG, "main: Calibr requested!" );
         // is ther a preasure in the sensor?
-        if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppPrefs::getCurrentMiliVolts() )
+        if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppStati::getCurrentMiliVolts() )
         {
           display->printAlert( msg );
           delay( 2000 );
@@ -152,16 +157,16 @@ void loop()
     //
     // read measure values if changed
     //
-    if ( prefs::AppPrefs::getWasChanged() || nowTime > nextTimeToForceShowPresure )
+    if ( prefs::AppStati::getWasChanged() || nowTime > nextTimeToForceShowPresure )
     {
-      uint32_t mVolt = prefs::AppPrefs::getCurrentMiliVolts();
+      uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
       float volt = mVolt / 1000.0f;
-      float pressureBar = prefs::AppPrefs::getCurrentPressureBar();
+      float pressureBar = prefs::AppStati::getCurrentPressureBar();
       elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
       //
       display->printTension( volt );
       display->printPresure( pressureBar );
-      prefs::AppPrefs::resetWasChanged();
+      prefs::AppStati::resetWasChanged();
       // ever all this time
       nextTimeToForceShowPresure = nowTime + FORCE_DELAYTIME;
     }

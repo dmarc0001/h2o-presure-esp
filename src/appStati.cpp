@@ -18,110 +18,111 @@ namespace prefs
   //
   // init static variables
   //
-  const char *AppPrefs::tag{ "Prefs" };
-  bool AppPrefs::wasInit{ false };
-  Preferences AppPrefs::lPref;
-  uint32_t AppPrefs::calibreMinVal{ std::numeric_limits< uint32_t >::max() };
-  uint32_t AppPrefs::calibreMaxVal{ std::numeric_limits< uint32_t >::max() };
-  double AppPrefs::calibreFactor{ -10.0 };
-  uint32_t AppPrefs::currentMiliVolts{ 0 };
-  float AppPrefs::currentPressureBar{ 0.0F };
-  volatile bool AppPrefs::presureWasChanged{ true };
+  const char *AppStati::tag{ "AppStati" };
+  bool AppStati::wasInit{ false };
+  bool AppStati::spiffsInit{ false };
+  Preferences AppStati::lPref;
+  uint32_t AppStati::calibreMinVal{ std::numeric_limits< uint32_t >::max() };
+  uint32_t AppStati::calibreMaxVal{ std::numeric_limits< uint32_t >::max() };
+  double AppStati::calibreFactor{ -10.0 };
+  uint32_t AppStati::currentMiliVolts{ 0 };
+  float AppStati::currentPressureBar{ 0.0F };
+  volatile bool AppStati::presureWasChanged{ true };
 
-  void AppPrefs::init()
+  void AppStati::init()
   {
-    AppPrefs::lPref.begin( APPNAME, false );
-    if ( AppPrefs::wasInit )
+    AppStati::lPref.begin( APPNAME, false );
+    if ( AppStati::wasInit )
       return;
-    if ( !AppPrefs::getIfPrefsInit() )
+    if ( !AppStati::getIfPrefsInit() )
     {
       Serial.println( "first-time-init preferences..." );
       char hostname[ 32 ];
       uint16_t chip = static_cast< uint16_t >( ESP.getEfuseMac() >> 32 );
       snprintf( hostname, 32, "%s-%08X", DEFAULT_HOSTNAME, chip );
       String hn( &hostname[ 0 ] );
-      AppPrefs::lPref.putString( LOC_HOSTNAME, hn );
-      AppPrefs::lPref.putUInt( CAL_MINVAL, PRESSURE_MIN_MILIVOLT );
-      AppPrefs::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
-      AppPrefs::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
-      AppPrefs::setIfPrefsInit( true );
+      AppStati::lPref.putString( LOC_HOSTNAME, hn );
+      AppStati::lPref.putUInt( CAL_MINVAL, PRESSURE_MIN_MILIVOLT );
+      AppStati::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
+      AppStati::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
+      AppStati::setIfPrefsInit( true );
       Serial.println( "first-time-init preferences...DONE" );
     }
-    AppPrefs::wasInit = true;
+    AppStati::wasInit = true;
   }
 
   /**
    * get the local hostname
    */
-  String AppPrefs::getHostName()
+  String AppStati::getHostName()
   {
-    return ( AppPrefs::lPref.getString( LOC_HOSTNAME, DEFAULT_HOSTNAME ) );
+    return ( AppStati::lPref.getString( LOC_HOSTNAME, DEFAULT_HOSTNAME ) );
   }
 
-  uint32_t AppPrefs::getCalibreMinVal()
+  uint32_t AppStati::getCalibreMinVal()
   {
-    if ( AppPrefs::calibreMinVal == std::numeric_limits< uint32_t >::max() )
+    if ( AppStati::calibreMinVal == std::numeric_limits< uint32_t >::max() )
     {
-      AppPrefs::calibreMinVal = AppPrefs::lPref.getUInt( CAL_FACTOR, PRESSURE_MIN_MILIVOLT );
+      AppStati::calibreMinVal = AppStati::lPref.getUInt( CAL_FACTOR, PRESSURE_MIN_MILIVOLT );
     }
-    return AppPrefs::calibreMinVal;
+    return AppStati::calibreMinVal;
   }
 
-  uint32_t AppPrefs::getCalibreMaxVal()
+  uint32_t AppStati::getCalibreMaxVal()
   {
-    if ( AppPrefs::calibreMaxVal == std::numeric_limits< uint32_t >::max() )
+    if ( AppStati::calibreMaxVal == std::numeric_limits< uint32_t >::max() )
     {
-      AppPrefs::calibreMaxVal = AppPrefs::lPref.getUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
+      AppStati::calibreMaxVal = AppStati::lPref.getUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
     }
-    return AppPrefs::calibreMaxVal;
+    return AppStati::calibreMaxVal;
   }
 
-  double AppPrefs::getCalibreFactor()
+  double AppStati::getCalibreFactor()
   {
-    if ( AppPrefs::calibreFactor < 0.0F )
+    if ( AppStati::calibreFactor < 0.0F )
     {
-      AppPrefs::calibreFactor = AppPrefs::lPref.getDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
+      AppStati::calibreFactor = AppStati::lPref.getDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
     }
-    return AppPrefs::calibreFactor;
+    return AppStati::calibreFactor;
   }
 
-  void AppPrefs::setCalibreMinVal( uint32_t _val )
+  void AppStati::setCalibreMinVal( uint32_t _val )
   {
-    AppPrefs::lPref.putUInt( CAL_MINVAL, _val );
-    AppPrefs::calibreMinVal = _val;
+    AppStati::lPref.putUInt( CAL_MINVAL, _val );
+    AppStati::calibreMinVal = _val;
   }
 
-  void AppPrefs::setCalibreMaxVal( uint32_t _val )
+  void AppStati::setCalibreMaxVal( uint32_t _val )
   {
-    AppPrefs::lPref.putUInt( CAL_MAXVAL, _val );
-    AppPrefs::calibreMaxVal = _val;
+    AppStati::lPref.putUInt( CAL_MAXVAL, _val );
+    AppStati::calibreMaxVal = _val;
   }
 
-  void AppPrefs::setCalibreFactor( double _val )
+  void AppStati::setCalibreFactor( double _val )
   {
-    AppPrefs::lPref.putDouble( CAL_FACTOR, _val );
-    AppPrefs::calibreFactor = _val;
+    AppStati::lPref.putDouble( CAL_FACTOR, _val );
+    AppStati::calibreFactor = _val;
   }
 
-  void AppPrefs::setCurrentMiliVolts( uint32_t _val )
+  void AppStati::setCurrentMiliVolts( uint32_t _val )
   {
-    if ( AppPrefs::currentMiliVolts != _val )
+    if ( AppStati::currentMiliVolts != _val )
     {
-      AppPrefs::currentMiliVolts = _val;
+      AppStati::currentMiliVolts = _val;
       // presureWasChanged = true;
     }
   }
 
-  void AppPrefs::setCurrentPressureBar( float _val )
+  void AppStati::setCurrentPressureBar( float _val )
   {
     //
     // https://stackoverflow.com/questions/14369673/round-double-to-3-points-decimal
     //  number 60, thanks!
     //
     float val = std::round( _val / 0.01 ) * 0.01;
-    if ( AppPrefs::currentPressureBar != val )
+    if ( AppStati::currentPressureBar != val )
     {
-      AppPrefs::currentPressureBar = val;
+      AppStati::currentPressureBar = val;
       presureWasChanged = true;
     }
   }
@@ -129,25 +130,25 @@ namespace prefs
   /**
    * Check if preferences was initialized once
    */
-  bool AppPrefs::getIfPrefsInit()
+  bool AppStati::getIfPrefsInit()
   {
     String defaultVal( "-" );
     String correctVal( INITVAL );
-    return ( correctVal == AppPrefs::lPref.getString( CHECKVAL, defaultVal ) );
+    return ( correctVal == AppStati::lPref.getString( CHECKVAL, defaultVal ) );
   }
 
   /**
    * set if prefs was initialized
    */
-  bool AppPrefs::setIfPrefsInit( bool _set )
+  bool AppStati::setIfPrefsInit( bool _set )
   {
     if ( _set )
     {
       // if set => set the correct value
-      return ( AppPrefs::lPref.putString( CHECKVAL, INITVAL ) > 0 );
+      return ( AppStati::lPref.putString( CHECKVAL, INITVAL ) > 0 );
     }
     // else remove the key, set the properties not valid
-    return AppPrefs::lPref.remove( CHECKVAL );
+    return AppStati::lPref.remove( CHECKVAL );
   }
 
 }  // namespace prefs

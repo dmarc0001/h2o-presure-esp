@@ -2,7 +2,9 @@
 #include "statics.hpp"
 #include "pressureSensor.hpp"
 #include "appPrefs.hpp"
+#include "appStructs.hpp"
 #include "appStati.hpp"
+#include "fileService.hpp"
 
 namespace measure_h2o
 {
@@ -55,7 +57,7 @@ namespace measure_h2o
     //
     // set min volt == measured value
     //
-    prefs::AppPrefs::setCalibreMinVal( prefs::AppPrefs::getCurrentMiliVolts() );
+    prefs::AppStati::setCalibreMinVal( prefs::AppStati::getCurrentMiliVolts() );
     //
     // compute calibre factor
     //
@@ -81,20 +83,20 @@ namespace measure_h2o
     }
     // average minus bias
     uint32_t cMiliVolts = ( readValuesSum >> 3 );
-    prefs::AppPrefs::setCurrentMiliVolts( cMiliVolts );
-    double volts = ( cMiliVolts - prefs::AppPrefs::getCalibreMinVal() ) / 1000.0;
+    prefs::AppStati::setCurrentMiliVolts( cMiliVolts );
+    double volts = ( cMiliVolts - prefs::AppStati::getCalibreMinVal() ) / 1000.0;
     // elog.log( DEBUG, "%s: current: <%02.2fV> - factor <%02.5f>", PrSensor::tag, static_cast< float >( volts ),
-    // static_cast< float >( prefs::AppPrefs::getCalibreFactor() ) );
-    float cBar = volts * prefs::AppPrefs::getCalibreFactor();
+    // static_cast< float >( prefs::AppStati::getCalibreFactor() ) );
+    float cBar = volts * prefs::AppStati::getCalibreFactor();
     if ( cBar < 0.0F || cBar > 6.0F )
-      prefs::AppPrefs::setCurrentPressureBar( 0.0F );
+      prefs::AppStati::setCurrentPressureBar( 0.0F );
     else
-      prefs::AppPrefs::setCurrentPressureBar( cBar );
+      prefs::AppStati::setCurrentPressureBar( cBar );
   }
 
   void PrSensor::mTask( void * )
   {
-    uint64_t nextTimeToMeasure = prefs::PRESSURE_MEASURE_DIFF_TIME_YS;
+    uint64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_YS;
 
     while ( true )
     {
@@ -109,7 +111,7 @@ namespace measure_h2o
       //
       if ( esp_timer_get_time() > nextTimeToMeasure )
       {
-        nextTimeToMeasure = esp_timer_get_time() + prefs::PRESSURE_MEASURE_DIFF_TIME_YS;
+        nextTimeToMeasure = esp_timer_get_time() + prefs::MEASURE_DIFF_TIME_YS;
         elog.log( DEBUG, "%s: pressure measure...", PrSensor::tag );
         // show mark to message "im measuring"
         display->printMeasureMark();
@@ -117,6 +119,17 @@ namespace measure_h2o
         // measure
         //
         PrSensor::doMeasure();
+        //
+        // do save
+        //
+        presure_data_t dataset;
+        char buffer[ 24 ];
+        snprintf( buffer, 22, "%04d-%02d-%02dT%02d:%02d:%02d\0", year(), month(), day(), hour(), minute(), second() );
+        String tmStr( buffer );
+        dataset.timestamp = buffer;
+        dataset.miliVolts = prefs::AppStati::getCurrentMiliVolts();
+        dataset.pressureBar = prefs::AppStati::getCurrentPressureBar();
+        FileService::dataset.push_back( dataset );
         delay( 500U );
         display->hideMeasureMark();
       }

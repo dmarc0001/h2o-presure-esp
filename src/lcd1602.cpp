@@ -56,7 +56,7 @@ namespace measure_h2o
     if ( !printedTension )
     {
       this->setCursor( 0, 0 );
-      this->send_string( "Spng:           " );
+      this->send_string( "Spng:       V   " );
       printedTension = true;
       printedAlert = false;
       printedMessage = false;
