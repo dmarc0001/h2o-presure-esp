@@ -2,6 +2,7 @@
 #include <Preferences.h>
 #include "appPrefs.hpp"
 #include "appStructs.hpp"
+#include "filesystem.hpp"
 
 namespace prefs
 {
@@ -12,7 +13,7 @@ namespace prefs
     private:
     static const char *tag;
     static bool wasInit;                     //! was the prefs object initialized?
-    static bool spiffsInit;                  //! was SPIFFS initialized?
+    static bool httpActive;                  //! was http active?
     static Preferences lPref;                //! static preferences object
     static uint32_t calibreMinVal;           //! minimal value by calibr
     static uint32_t calibreMaxVal;           //! maximal value by calibr
@@ -27,11 +28,15 @@ namespace prefs
     static String getHostName();  //! get my own hostname
     static bool getIsSpiffsInit()
     {
-      return AppStati::spiffsInit;
+      return Filesystem::getIsOkay();
     }
-    static void setIsSpiffsInit( bool _val )
+    static bool getHttpActive()
     {
-      AppStati::spiffsInit = _val;
+      return AppStati::httpActive;
+    }
+    static void setHttpActive( bool _val )
+    {
+      AppStati::httpActive = _val;
     }
     static uint32_t getCalibreMinVal();
     static uint32_t getCalibreMaxVal();
@@ -66,9 +71,12 @@ namespace prefs
     {
       return AppStati::wlanState;
     }
-    static String getTimeZone();          //! get my timezone
-    static bool setTimeZone( String & );  //! set my timezone
-
+    static String getTimeZone();                   //! get my timezone
+    static bool setTimeZone( String & );           //! set my timezone
+    static uint8_t getLogLevel();                  //! get Logging
+    static bool setLogLevel( uint8_t );            //! set Logging
+    static uint32_t getMeasureInterval_s();        //! get interval bwtween two measures
+    static void setMeasureInterval_s( uint32_t );  //! set Interval bewtween two measures
     private:
     static bool getIfPrefsInit();        //! internal, is preferences initialized?
     static bool setIfPrefsInit( bool );  //! internal, set preferences initialized?

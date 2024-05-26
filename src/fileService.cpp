@@ -22,38 +22,10 @@ namespace measure_h2o
     if ( FileService::wasInit )
       return;
     //
-    if ( !prefs::AppStati::getIsSpiffsInit() )
-    {
-      elog.log( DEBUG, "%s: init filesystem...", FileService::tag );
-      if ( !SPIFFS.begin( false, prefs::WEB_PATH, 8, prefs::WEB_PARTITION_LABEL ) )
-      {
-        // TODO: Errormessage
-        elog.log( INFO, "%s: init failed, FORMAT filesystem...", FileService::tag );
-        if ( !SPIFFS.format() )
-        {
-          // there is an error BAD!
-          // TODO: Errormessage
-          elog.log( ERROR, "%s: An Error has occurred while mounting SPIFFS!", FileService::tag );
-          delay( 5000 );
-        }
-        else
-        {
-          elog.log( INFO, "%s: FORMAT filesystem successful...", FileService::tag );
-          // is okay
-          prefs::AppStati::setIsSpiffsInit( true );
-        }
-        ESP.restart();
-      }
-      else
-      {
-        // is okay
-        prefs::AppStati::setIsSpiffsInit( true );
-        FileService::start();
-        elog.log( DEBUG, "%s: init filesystem...OK", FileService::tag );
-      }
-    }
     // init semaphore for access to datafiles
+    //
     vSemaphoreCreateBinary( measureFileSem );
+    FileService::start();
   }
 
   void FileService::start()
@@ -114,7 +86,7 @@ namespace measure_h2o
       char buffer[ 28 ];
       snprintf( buffer, 28, prefs::DAYLY_FILE_NAME, year(), month(), day() );
       String fileName( prefs::DATA_PATH );
-      fileName += String( "/" ) + String( buffer );
+      fileName += String( buffer );
 
       // open/create File mode append
       auto fh = SPIFFS.open( fileName, "a", true );
@@ -194,7 +166,7 @@ namespace measure_h2o
     //
     // find outdated files
     //
-    int prefix = strlen( prefs::DATA_PATH ) + 1;
+    int prefix = strlen( prefs::DATA_PATH );
     tmElements_t currentTime;
     currentTime.Hour = hour();
     currentTime.Minute = minute();

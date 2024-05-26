@@ -20,6 +20,11 @@ namespace measure_h2o
 
   void MLCD::init()
   {
+    printedPresureTitle = false;
+    printedTension = false;
+    printedAlert = false;
+    printedMessage = false;
+    showMeasureMark = false;
     Waveshare_LCD1602::init();
     uint8_t backsl[ 8 ] = { 0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00, 0x00 };
     uint8_t measure[ 8 ] = { 0x0e, 0x11, 0x15, 0x15, 0x15, 0x11, 0x0e, 0x00 };
@@ -27,6 +32,16 @@ namespace measure_h2o
     this->customSymbol( 1, measure );
     this->printGreeting();
   }  // namespace measure_h2o
+
+  void MLCD::clear()
+  {
+    printedPresureTitle = false;
+    printedTension = false;
+    printedAlert = false;
+    printedMessage = false;
+    showMeasureMark = false;
+    Waveshare_LCD1602::clear();
+  }
 
   void MLCD::printGreeting()
   {
