@@ -19,6 +19,7 @@
 
 constexpr uint64_t DELAYTIME = 750000ULL;
 constexpr uint64_t HARTBEATTIME = 400000ULL;
+constexpr uint64_t ANTTIME = 1200000ULL;
 constexpr uint64_t CALIBRTIME = 255000ULL;
 constexpr uint64_t FORCE_DELAYTIME = 10000000ULL;
 
@@ -96,7 +97,9 @@ void loop()
   static auto connected = WlanState::DISCONNECTED;
   static uint64_t nextTimeToShowColors = DELAYTIME;
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
+  static uint64_t nextAntTime = ANTTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
+  static bool antMarkShow{ false };
   uint64_t nowTime = esp_timer_get_time();
 
   if ( setNextTimeCorrect < nowTime )
@@ -142,6 +145,33 @@ void loop()
     // hartbeat
     //
     display->printHartbeat();
+  }
+  //
+  // ant symbol
+  //
+  if ( nowTime > nextAntTime )
+  {
+    //
+    // show ant if WiFi
+    //
+    nextAntTime = nowTime + ANTTIME;
+    if ( prefs::AppStati::getWlanState() == prefs::WlanState::TIMESYNCED )
+    {
+      if ( antMarkShow )
+      {
+        display->printAntMark();
+        nextAntTime = nowTime + (ANTTIME << 1);
+      }
+      else
+      {
+        display->hideAntMark();
+      }
+      antMarkShow = !antMarkShow;
+    }
+    else
+    {
+      display->hideAntMark();
+    }
   }
 }
 //

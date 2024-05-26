@@ -29,6 +29,8 @@ namespace measure_h2o
     void printAlert( String & );
     void printMessage( String & );
     void printGreeting();
+    void printAntMark();
+    void hideAntMark();
   };
 
   using sysDisplay = std::shared_ptr< MLCD >;

@@ -26,7 +26,7 @@ namespace prefs
   constexpr uint32_t CURRENT_BORDER_FOR_CALIBR = 380;                                            //! max value for calibr
   constexpr uint32_t PRESSURE_MIN_MILIVOLT = 300;                                                //! minimal milivolt 0 bar
   constexpr uint32_t PRESSURE_MAX_MILIVOLT = 2700;                                               //! maximal milivolt 5 Bar
-  constexpr uint32_t MEASURE_DIFF_TIME_S = 10;                                                   //! diff between two measures secounds
+  constexpr uint32_t MEASURE_DIFF_TIME_S = 30;                                                   //! diff between two measures secounds
   constexpr gpio_num_t DISPLAY_SDA_PIN = GPIO_NUM_5;                                             //! PIN SDA for I2C display
   constexpr gpio_num_t DOSPLAY_SCL_PIN = GPIO_NUM_6;                                             //! PIN SCL for I2C display
   constexpr int DISPLAY_COLS = 16;                                                               //! display has 16 clumns
