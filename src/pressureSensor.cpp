@@ -11,6 +11,7 @@ namespace measure_h2o
   const char *PrSensor::tag{ "PrSensor" };
   gpio_num_t PrSensor::adcPin{ prefs::PRESSURE_GPIO };
   volatile bool PrSensor::pauseMeasureTask{ false };
+  uint64_t PrSensor::interval_ys{ prefs::MEASURE_DIFF_TIME_S * 1000000ULL };
 
   TaskHandle_t PrSensor::taskHandle{ nullptr };
 
@@ -21,6 +22,7 @@ namespace measure_h2o
     adcAttachPin( PrSensor::adcPin );
     analogSetAttenuation( ADC_11db );
     analogReadResolution( prefs::PRESSURE_RES );
+    PrSensor::interval_ys = ( prefs::AppStati::getMeasureInterval_s() * 1000000ULL );
     PrSensor::start();
     elog.log( DEBUG, "%s: init pressure measure object...OK", PrSensor::tag );
   }
@@ -85,8 +87,6 @@ namespace measure_h2o
     uint32_t cMiliVolts = ( readValuesSum >> 3 );
     prefs::AppStati::setCurrentMiliVolts( cMiliVolts );
     double volts = ( cMiliVolts - prefs::AppStati::getCalibreMinVal() ) / 1000.0;
-    // elog.log( DEBUG, "%s: current: <%02.2fV> - factor <%02.5f>", PrSensor::tag, static_cast< float >( volts ),
-    // static_cast< float >( prefs::AppStati::getCalibreFactor() ) );
     float cBar = volts * prefs::AppStati::getCalibreFactor();
     if ( cBar < 0.0F || cBar > 6.0F )
       prefs::AppStati::setCurrentPressureBar( 0.0F );
@@ -96,7 +96,7 @@ namespace measure_h2o
 
   void PrSensor::mTask( void * )
   {
-    uint64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_YS;
+    static uint64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_S * 1000000ULL;
 
     while ( true )
     {
@@ -112,7 +112,7 @@ namespace measure_h2o
       //
       if ( esp_timer_get_time() > nextTimeToMeasure )
       {
-        nextTimeToMeasure = esp_timer_get_time() + prefs::MEASURE_DIFF_TIME_YS;
+        nextTimeToMeasure = esp_timer_get_time() + PrSensor::interval_ys;
         elog.log( DEBUG, "%s: pressure measure...", PrSensor::tag );
         // show mark to message "im measuring"
         display->printMeasureMark();
@@ -134,7 +134,7 @@ namespace measure_h2o
         delay( 500U );
         display->hideMeasureMark();
       }
-      delay( 1000U );
+      delay( 753U );
     }
   }
 

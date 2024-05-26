@@ -15,6 +15,7 @@ namespace measure_h2o
     static gpio_num_t adcPin;               //! gpio pin
     static TaskHandle_t taskHandle;         //! only one times
     static volatile bool pauseMeasureTask;  //! if i make an calibration, pause task
+    static uint64_t interval_ys;            //! interval between two measures
 
     public:
     static void init();           //! init the startic object

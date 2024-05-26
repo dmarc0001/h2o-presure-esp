@@ -8,17 +8,20 @@
 #include "sdkconfig.h"
 #include <Elog.h>
 #include <TimeLib.h>
+#include "filesystem.hpp"
 #include "appStati.hpp"
 #include "appPrefs.hpp"
 #include "fileService.hpp"
 #include "statics.hpp"
 #include "wifiConfig.hpp"
+#include "webServer.hpp"
 #include "main.hpp"
 
 constexpr uint64_t DELAYTIME = 750000ULL;
-constexpr uint64_t FORCE_DELAYTIME = 10000000ULL;
 constexpr uint64_t HARTBEATTIME = 400000ULL;
+constexpr uint64_t ANTTIME = 1200000ULL;
 constexpr uint64_t CALIBRTIME = 255000ULL;
+constexpr uint64_t FORCE_DELAYTIME = 10000000ULL;
 
 void setup()
 {
@@ -27,20 +30,27 @@ void setup()
   // Debug Ausgabe init
   Serial.begin( 115200 );
   Serial.println( "main: program started..." );
+  Filesystem::init();
   // sleep( 5 );
-  elog.addSerialLogging( Serial, "GLO", DEBUG );  // Enable serial logging. We want only INFO or lower logleve.
-  elog.log( INFO, "main: start with logging..." );
-  elog.log( INFO, "main: init LEDSTRIPE..." );
-  //
-  // first appstati object init
-  //
-  elog.log( INFO, "main: init preferences..." );
+  Loglevel level = DEBUG;
   prefs::AppStati::init();
+  level = static_cast< Loglevel >( prefs::AppStati::getLogLevel() );
+  elog.addSerialLogging( Serial, "GLO", level );
+  elog.log( INFO, "main: start with logging..." );
   //
   // file storage init
   //
   FileService::init();
   //
+  // timezone settings
+  //
+  elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
+  setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
+  tzset();
+  //
+  // led stripe settings
+  //
+  elog.log( INFO, "main: init LEDSTRIPE..." );
   mLED = std::make_shared< MLED >( prefs::LED_NUM, prefs::LED_INTERNAL, NEO_GRB + NEO_KHZ800 );
   mLED->setBrightness( 128 );  // Set BRIGHTNESS  (max = 255)
   // start analog reader
@@ -57,9 +67,6 @@ void setup()
   //
   // WLAN/Networking init
   //
-  elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
-  setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
-  tzset();
   static String hName( prefs::AppStati::getHostName() );
   elog.log( INFO, "main: hostname: <%s>...", hName.c_str() );
   elog.log( DEBUG, "main: start wifi..." );
@@ -88,10 +95,11 @@ void loop()
 
   static uint64_t setNextTimeCorrect{ ( 1000ULL * 1000ULL * 21600ULL ) };
   static auto connected = WlanState::DISCONNECTED;
-  static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
-  static uint64_t nextTimeToShowPresure = DELAYTIME;
+  static uint64_t nextTimeToShowColors = DELAYTIME;
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
+  static uint64_t nextAntTime = ANTTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
+  static bool antMarkShow{ false };
   uint64_t nowTime = esp_timer_get_time();
 
   if ( setNextTimeCorrect < nowTime )
@@ -99,19 +107,8 @@ void loop()
     //
     // somtimes correct elog time
     //
-    elog.log( DEBUG, "main: logger time correction..." );
     setNextTimeCorrect = nowTime + ( 1000ULL * 1000ULL * 21600ULL );
-    struct tm ti;
-    if ( !getLocalTime( &ti ) )
-    {
-      elog.log( WARNING, "main: failed to obtain system time!" );
-    }
-    else
-    {
-      elog.log( DEBUG, "main: gotten system time!" );
-      Elog::provideTime( ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec );
-      elog.log( DEBUG, "main: logger time correction...OK" );
-    }
+    correctTime();
   }
 
   if ( nowTime > nextTimeCalibrCheck )
@@ -120,96 +117,20 @@ void loop()
     // time to check if the master whish to calibre
     //
     nextTimeCalibrCheck = nowTime + CALIBRTIME;
-    auto cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
-    if ( cl_switch == LOW )
-    {
-      //
-      // there was an low impulse, is this permanent
-      //
-      elog.log( DEBUG, "main: Calibr requested???" );
-      delay( 20 );
-      //
-      // after that, always low?
-      //
-      cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
-      if ( cl_switch == LOW )
-      {
-        String msg( "Druck erkannt!" );
-        String nix( "nicht moeglich" );
-        // maybe i can calibr?
-        elog.log( DEBUG, "main: Calibr requested!" );
-        // is ther a preasure in the sensor?
-        if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppStati::getCurrentMiliVolts() )
-        {
-          display->printAlert( msg );
-          delay( 2000 );
-          while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
-          {
-            display->printAlert( nix );
-            delay( 800 );
-            display->printAlert( msg );
-            delay( 1000 );
-          }
-          nextTimeCalibrCheck = nowTime + 10000000ULL;
-        }
-        else
-        {
-          //
-          // i should calibr the device
-          //
-          elog.log( DEBUG, "main: call calibre routine..." );
-          String msg( "calibriere..." );
-          display->printMessage( msg );
-          PrSensor::calibreSensor();
-          msg = "fertig...       ";
-          display->printMessage( msg );
-          elog.log( DEBUG, "main: call calibre routine...done" );
-          elog.log( INFO, "calibre routine done" );
-          while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
-          {
-            delay( 100 );
-            taskYIELD();
-          }
-          elog.log( DEBUG, "main: continue" );
-        }
-      }
-    }
+    auto result = controlCalibr();
+    if ( result > 0 )
+      nextTimeCalibrCheck = nowTime + 10000000ULL;
   }
 
-  if ( nowTime > nextTimeToShowPresure )
+  if ( nowTime > nextTimeToShowColors )
   {
     //
     // lets actualize the preasure display
     //
-    nextTimeToShowPresure = nowTime + DELAYTIME;
-    //
-    // DEMONSTRATION ONLY, IMPLEMENT LATER
-    //
-    uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
-    uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
-    uint8_t blue = static_cast< uint8_t >( 0xff & random( 255 ) );
-    mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
-    mLED->setPixelColor( 0, mLED->Color( red, green, blue ) );
-    mLED->show();
-    delay( 150 );
-    mLED->setPixelColor( 0, 0x0 );
-    mLED->show();
-    //
-    // read measure values if changed
-    //
-    if ( prefs::AppStati::getWasChanged() || nowTime > nextTimeToForceShowPresure )
-    {
-      uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
-      float volt = mVolt / 1000.0f;
-      float pressureBar = prefs::AppStati::getCurrentPressureBar();
-      elog.log( DEBUG, "main: pressure raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
-      //
-      display->printTension( volt );
-      display->printPresure( pressureBar );
-      prefs::AppStati::resetWasChanged();
-      // ever all this time
-      nextTimeToForceShowPresure = nowTime + FORCE_DELAYTIME;
-    }
+    nextTimeToShowColors = nowTime + DELAYTIME;
+    checkOnlineState();
+    auto result = showColors();
+    updateDisplay();
   }
   //
   // hartbeat
@@ -225,6 +146,33 @@ void loop()
     //
     display->printHartbeat();
   }
+  //
+  // ant symbol
+  //
+  if ( nowTime > nextAntTime )
+  {
+    //
+    // show ant if WiFi
+    //
+    nextAntTime = nowTime + ANTTIME;
+    if ( prefs::AppStati::getWlanState() == prefs::WlanState::TIMESYNCED )
+    {
+      if ( antMarkShow )
+      {
+        display->printAntMark();
+        nextAntTime = nowTime + (ANTTIME << 1);
+      }
+      else
+      {
+        display->hideAntMark();
+      }
+      antMarkShow = !antMarkShow;
+    }
+    else
+    {
+      display->hideAntMark();
+    }
+  }
 }
 //
 time_t getNtpTime()
@@ -236,4 +184,181 @@ time_t getNtpTime()
     return now();
   }
   return 0;
+}
+
+/**
+ * correct time
+ */
+void correctTime()
+{
+  using namespace measure_h2o;
+  //
+  // somtimes correct elog time
+  //
+  elog.log( DEBUG, "main: logger time correction..." );
+  struct tm ti;
+  if ( !getLocalTime( &ti ) )
+  {
+    elog.log( WARNING, "main: failed to obtain system time!" );
+  }
+  else
+  {
+    elog.log( DEBUG, "main: gotten system time!" );
+    Elog::provideTime( ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec );
+    elog.log( DEBUG, "main: logger time correction...OK" );
+  }
+}
+
+/**
+ * control calibre key
+ */
+int controlCalibr()
+{
+  using namespace measure_h2o;
+
+  auto cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
+  if ( cl_switch == LOW )
+  {
+    //
+    // there was an low impulse, is this permanent
+    //
+    elog.log( DEBUG, "main: calibrating requested???" );
+    delay( 20 );
+    //
+    // after that, always low?
+    //
+    cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
+    if ( cl_switch == LOW )
+    {
+      String msg( "Druck erkannt!" );
+      String nix( "nicht moeglich" );
+      // maybe i can calibr?
+      elog.log( DEBUG, "main: calibrating requested!" );
+      // is ther a preasure in the sensor?
+      if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppStati::getCurrentMiliVolts() )
+      {
+        display->printAlert( msg );
+        delay( 2000 );
+        while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
+        {
+          display->printAlert( nix );
+          delay( 800 );
+          display->printAlert( msg );
+          delay( 1000 );
+        }
+        return 1;
+      }
+      else
+      {
+        //
+        // i should calibr the device
+        //
+        elog.log( DEBUG, "main: call calibre routine..." );
+        String msg( "calibriere..." );
+        display->printMessage( msg );
+        PrSensor::calibreSensor();
+        msg = "fertig...       ";
+        display->printMessage( msg );
+        elog.log( DEBUG, "main: call calibre routine...done" );
+        elog.log( INFO, "calibre routine done" );
+        while ( digitalRead( prefs::CALIBR_REQ_PIN ) == LOW )
+        {
+          delay( 100 );
+          taskYIELD();
+        }
+        elog.log( DEBUG, "main: continue" );
+      }
+    }
+  }
+  return 0;
+}
+
+/**
+ * show pressure values
+ */
+int showColors()
+{
+  using namespace measure_h2o;
+
+  //
+  // DEMONSTRATION ONLY, IMPLEMENT LATER
+  //
+  uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
+  uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
+  uint8_t blue = static_cast< uint8_t >( 0xff & random( 255 ) );
+  mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
+  mLED->setPixelColor( 0, mLED->Color( red, green, blue ) );
+  mLED->show();
+  delay( 150 );
+  mLED->setPixelColor( 0, 0x0 );
+  mLED->show();
+  return 0;
+}
+
+void checkOnlineState()
+{
+  using namespace measure_h2o;
+  static WlanState currWLANState{ WlanState::DISCONNECTED };
+
+  if ( currWLANState != prefs::AppStati::getWlanState() )
+  {
+    auto new_connected = prefs::AppStati::getWlanState();
+    if ( currWLANState == WlanState::DISCONNECTED || currWLANState == WlanState::FAILED || currWLANState == WlanState::SEARCHING )
+    {
+      //
+      // was not functional for webservice
+      //
+      if ( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED )
+      {
+        //
+        // new connection, start webservice
+        //
+        elog.log( INFO, "main: ip connectivity found, start webserver." );
+        APIWebServer::start();
+      }
+      else
+      {
+        elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
+        APIWebServer::stop();
+      }
+    }
+    else
+    {
+      //
+      // was functional for webservice
+      //
+      if ( !( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED ) )
+      {
+        //
+        // not longer functional
+        //
+        elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
+        APIWebServer::stop();
+      }
+    }
+    // mark new value
+    currWLANState = new_connected;
+  }
+}
+
+void updateDisplay()
+{
+  using namespace measure_h2o;
+  static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
+  //
+  // set display if changed
+  //
+  if ( prefs::AppStati::getWasChanged() || esp_timer_get_time() > nextTimeToForceShowPresure )
+  {
+    uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
+    float volt = mVolt / 1000.0f;
+    float pressureBar = prefs::AppStati::getCurrentPressureBar();
+    if ( esp_timer_get_time() <= nextTimeToForceShowPresure )
+      elog.log( INFO, "main: pressure changed, raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
+    //
+    display->printTension( volt );
+    display->printPresure( pressureBar );
+    prefs::AppStati::resetWasChanged();
+    nextTimeToForceShowPresure = esp_timer_get_time() + FORCE_DELAYTIME;
+  }
 }

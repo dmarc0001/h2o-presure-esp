@@ -1,4 +1,5 @@
 #include <limits>
+#include <cmath>
 #include "appStati.hpp"
 #include "statics.hpp"
 
@@ -10,18 +11,20 @@ namespace prefs
   constexpr const char *CHECKVAL{ "confInit" };
   constexpr const char *INITVAL{ "wasInit" };
 
+  constexpr const char *DEBUGSETTING{ "debugging" };
   constexpr const char *LOC_HOSTNAME{ "hostname" };
   constexpr const char *LOC_TIMEZONE{ "timezone" };
   constexpr const char *CAL_MINVAL{ "cal_min" };
   constexpr const char *CAL_MAXVAL{ "cal_max" };
   constexpr const char *CAL_FACTOR{ "cal_factor" };
+  constexpr const char *MEASURE_TIMEDIFF{ "measure_diff" };
 
   //
   // init static variables
   //
   const char *AppStati::tag{ "AppStati" };
   bool AppStati::wasInit{ false };
-  bool AppStati::spiffsInit{ false };
+  bool AppStati::httpActive{ false };
   Preferences AppStati::lPref;
   uint32_t AppStati::calibreMinVal{ std::numeric_limits< uint32_t >::max() };
   uint32_t AppStati::calibreMaxVal{ std::numeric_limits< uint32_t >::max() };
@@ -48,7 +51,7 @@ namespace prefs
       AppStati::lPref.putUInt( CAL_MINVAL, PRESSURE_MIN_MILIVOLT );
       AppStati::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
       AppStati::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
-      AppStati::setIfPrefsInit( true );
+      AppStati::lPref.putUInt( MEASURE_TIMEDIFF, MEASURE_DIFF_TIME_S );
       Serial.println( "first-time-init preferences...DONE" );
     }
     AppStati::wasInit = true;
@@ -168,6 +171,30 @@ namespace prefs
   bool AppStati::setTimeZone( String &_zone )
   {
     return ( AppStati::lPref.putString( LOC_TIMEZONE, _zone ) > 0 );
+  }
+
+  uint8_t AppStati::getLogLevel()
+  {
+#ifdef BUILD_DEBUG
+    return ( AppStati::lPref.getUChar( DEBUGSETTING, DEBUG ) );
+#else
+    return ( AppStati::lPref.getUChar( DEBUGSETTING, INFO ) );
+#endif
+  }
+
+  bool AppStati::setLogLevel( uint8_t _set )
+  {
+    return ( AppStati::lPref.putUChar( DEBUGSETTING, _set ) == 1 );
+  }
+
+  uint32_t AppStati::getMeasureInterval_s()
+  {
+    return AppStati::lPref.getUInt( MEASURE_TIMEDIFF, MEASURE_DIFF_TIME_S );
+  }
+
+  void AppStati::setMeasureInterval_s( uint32_t _val )
+  {
+    AppStati::lPref.putUInt( MEASURE_TIMEDIFF, _val );
   }
 
 }  // namespace prefs

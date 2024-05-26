@@ -1,13 +1,17 @@
 # watch water pressure
 
 TODO:
-- small api for requests (return json)
-  - HTTP-GET /api/v1/version: software version
-  - HTTP-GET /api/v1/info : idf/platformio version, count of cpu cores
+  KEY for CALIBRE
+
+  - small api for requests (return json)
+  - HTTP-GET /version,html: software version
+  - HTTP-GET /info.html : idf/platformio version, count of cpu cores
+  - HTTP-GET /intervall.html : intervall of the measures
+  - HTTP-GET /api/v1/today : measure data for round about 24 hours ago
   - HTTP-GET /api/v1/set-timezone?timezone=GMT : set timezone (not working timezone bug)
   - HTTP-GET /api/v1/set-timezone?timezone-offset=3600 : set timezone offset from GMT (workarround for timezone bug)
   - HTTP-GET /api/v1/set-loglevel?level=7 : set controller loglevel, only app
-  - HTTP-GET /api/v1/set-syslog?server=192.168.1.44&port=512 : set syslog destination (UDP), IP, Port  / IP 0 disable
+  - HTTP-GET /api/v1/set-interval?interval=10 : set measure interval
   
 
 

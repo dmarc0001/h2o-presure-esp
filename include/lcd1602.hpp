@@ -20,6 +20,7 @@ namespace measure_h2o
     public:
     MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
     void init();
+    void clear();
     void printPresure( float );
     void printTension( float );
     void printHartbeat();
@@ -28,6 +29,8 @@ namespace measure_h2o
     void printAlert( String & );
     void printMessage( String & );
     void printGreeting();
+    void printAntMark();
+    void hideAntMark();
   };
 
   using sysDisplay = std::shared_ptr< MLCD >;

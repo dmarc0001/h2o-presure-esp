@@ -20,13 +20,30 @@ namespace measure_h2o
 
   void MLCD::init()
   {
+    printedPresureTitle = false;
+    printedTension = false;
+    printedAlert = false;
+    printedMessage = false;
+    showMeasureMark = false;
     Waveshare_LCD1602::init();
     uint8_t backsl[ 8 ] = { 0x00, 0x10, 0x08, 0x04, 0x02, 0x01, 0x00, 0x00 };
     uint8_t measure[ 8 ] = { 0x0e, 0x11, 0x15, 0x15, 0x15, 0x11, 0x0e, 0x00 };
+    uint8_t ant[ 8 ] = { 0x04, 0x0a, 0x15, 0x0a, 0x04, 0x04, 0x04, 0x04 };
     this->customSymbol( 0, backsl );
     this->customSymbol( 1, measure );
+    this->customSymbol( 2, ant );
     this->printGreeting();
   }  // namespace measure_h2o
+
+  void MLCD::clear()
+  {
+    printedPresureTitle = false;
+    printedTension = false;
+    printedAlert = false;
+    printedMessage = false;
+    showMeasureMark = false;
+    Waveshare_LCD1602::clear();
+  }
 
   void MLCD::printGreeting()
   {
@@ -41,7 +58,7 @@ namespace measure_h2o
     if ( !printedPresureTitle )
     {
       this->setCursor( 0, 1 );
-      this->send_string( "Druck:      bar " );
+      this->send_string( "Druck:     bar " );
       printedPresureTitle = true;
       printedAlert = false;
       printedMessage = false;
@@ -50,7 +67,7 @@ namespace measure_h2o
     {
       char buffer[ 16 ];
       snprintf( buffer, 5, "%1.2f", _pressureBar );
-      this->setCursor( 7, 1 );
+      this->setCursor( 6, 1 );
       this->send_string( buffer );
       lastPressure = _pressureBar;
     }
@@ -61,7 +78,7 @@ namespace measure_h2o
     if ( !printedTension )
     {
       this->setCursor( 0, 0 );
-      this->send_string( "Spng:       V   " );
+      this->send_string( "Spng:      V  " );
       printedTension = true;
       printedAlert = false;
       printedMessage = false;
@@ -69,7 +86,7 @@ namespace measure_h2o
     if ( lastTension != _tension )
     {
       char buffer[ 16 ];
-      this->setCursor( 7, 0 );
+      this->setCursor( 6, 0 );
       snprintf( buffer, 8, "%1.2f V", _tension );
       this->send_string( buffer );
       lastTension = _tension;
@@ -168,6 +185,18 @@ namespace measure_h2o
       this->setCursor( 0, 1 );
       this->send_string( _msg.c_str() );
     }
+  }
+
+  void MLCD::printAntMark()
+  {
+    this->setCursor( 15, 1 );
+    this->write_char( 2 );
+  }
+
+  void MLCD::hideAntMark()
+  {
+    this->setCursor( 15, 1 );
+    this->write_char( 0x20 );
   }
 
 }  // namespace measure_h2o
