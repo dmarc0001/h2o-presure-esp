@@ -12,6 +12,8 @@ namespace measure_h2o
   SemaphoreHandle_t FileService::measureFileSem{ nullptr };
   presure_data_set_t FileService::dataset{};
   TaskHandle_t FileService::taskHandle{ nullptr };
+  String FileService::todayFileName;
+  int FileService::todayDay{ -1 };
 
   void FileService::init()
   {
@@ -84,15 +86,12 @@ namespace measure_h2o
     if ( xSemaphoreTake( FileService::measureFileSem, pdMS_TO_TICKS( 6000 ) ) == pdTRUE )
     {
       char buffer[ 28 ];
-      snprintf( buffer, 28, prefs::DAYLY_FILE_NAME, year(), month(), day() );
-      String fileName( prefs::DATA_PATH );
-      fileName += String( buffer );
-
+      FileService::getTodayFileName();
       // open/create File mode append
-      auto fh = SPIFFS.open( fileName, "a", true );
+      auto fh = SPIFFS.open( FileService::todayFileName, "a", true );
       if ( fh )
       {
-        elog.log( DEBUG, "%s: datafile <%s> opened...", FileService::tag, fileName.c_str() );
+        elog.log( DEBUG, "%s: datafile <%s> opened...", FileService::tag, FileService::todayFileName.c_str() );
         while ( FileService::dataset.size() > 0 )
         {
           //
@@ -106,15 +105,15 @@ namespace measure_h2o
           fh.print( elem.timestamp );
           fh.print( "," );
           snprintf( buffer, 6, "%02.2f\0", elem.pressureBar );
+          fh.print( buffer );
           fh.print( "," );
           snprintf( buffer, 8, "%06d\0", elem.miliVolts );
           fh.print( buffer );
           fh.print( "\n" );
           fh.flush();
           ++savedCount;
-          //
         }
-        elog.log( DEBUG, "%s: datafile <%s> <%d> lines written, close...", FileService::tag, fileName.c_str(), savedCount );
+        elog.log( DEBUG, "%s: datafile <%s> <%d> lines written...", FileService::tag, FileService::todayFileName.c_str(), savedCount );
         fh.close();
       }
       else
@@ -123,7 +122,7 @@ namespace measure_h2o
         {
           FileService::dataset.erase( FileService::dataset.begin() );
         }
-        elog.log( ERROR, "%s: datafile <%s> can't open, data lost!", FileService::tag, fileName.c_str() );
+        elog.log( ERROR, "%s: datafile <%s> can't open, data lost!", FileService::tag, FileService::todayFileName.c_str() );
       }
     }
     // We have finished accessing the shared resource.  Release the
@@ -134,12 +133,13 @@ namespace measure_h2o
 
   int FileService::checkFileSys()
   {
-    File root = SPIFFS.open( prefs::DATA_PATH );
+    File root = SPIFFS.open( String( prefs::DATA_PATH ).substring( 0, strlen( prefs::DATA_PATH ) - 1 ) );
     std::regex reg( prefs::DAYLY_FILE_PATTERN );
     std::smatch match;
     std::string fname( root.getNextFileName().c_str() );
     std::vector< String > fileList;
 
+    elog.log( INFO, "%s: filesystem check, search older files...", FileService::tag );
     //
     // find my files in filenames
     //
@@ -163,6 +163,8 @@ namespace measure_h2o
       delay( 1 );
     }
     root.close();
+    if ( fileList.empty() )
+      return 0;
     //
     // find outdated files
     //
@@ -216,4 +218,19 @@ namespace measure_h2o
     }
     return 0;
   }
+
+  String &FileService::getTodayFileName()
+  {
+    if ( FileService::todayDay != day() )
+    {
+      char buffer[ 28 ];
+      FileService::todayDay = day();
+      snprintf( buffer, 28, prefs::DAYLY_FILE_NAME, year(), month(), day() );
+      String fileName( prefs::DATA_PATH );
+      fileName += String( buffer );
+      FileService::todayFileName = fileName;
+    }
+    return todayFileName;
+  }
+
 }  // namespace measure_h2o

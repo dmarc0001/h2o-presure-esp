@@ -4,6 +4,7 @@
 #include "statics.hpp"
 #include "appPrefs.hpp"
 #include "appStati.hpp"
+#include "fileService.hpp"
 
 namespace measure_h2o
 {
@@ -29,15 +30,16 @@ namespace measure_h2o
   {
     elog.log( INFO, "%s: start webserver...", APIWebServer::tag );
     // Cache responses for 1 minutes (60 seconds)
+    // fileroot in prefs::WEB_PATH
     APIWebServer::server.serveStatic( "/", SPIFFS, prefs::WEB_PATH ).setCacheControl( "max-age=60" );
     //
     // response filters
     //
-    APIWebServer::server.on( "/", HTTP_GET, APIWebServer::onIndex );
-    APIWebServer::server.on( "/index\\.html", HTTP_GET, APIWebServer::onIndex );
+    APIWebServer::server.on( "^/$", HTTP_GET, APIWebServer::onIndex );
+    APIWebServer::server.on( "^/index\\.html$", HTTP_GET, APIWebServer::onIndex );
     APIWebServer::server.on( "^\\/api\\/v1\\/(.*)$", HTTP_GET, APIWebServer::onApiV1 );
     APIWebServer::server.on( "^\\/api\\/v1\\/set-(.*)\?(.*)$", HTTP_GET, APIWebServer::onApiV1Set );
-    // EnvWebServer::server.on( "^\\/.*$", HTTP_GET, EnvWebServer::onFilesReq );
+    APIWebServer::server.on( "^\\/.*$", HTTP_GET, APIWebServer::onFilesReq );
     APIWebServer::server.onNotFound( APIWebServer::onNotFound );
     APIWebServer::server.begin();
     elog.log( DEBUG, "%s: start webserver...OK", APIWebServer::tag );
@@ -57,7 +59,7 @@ namespace measure_h2o
    */
   void APIWebServer::onIndex( AsyncWebServerRequest *request )
   {
-    String file( "/index.html" );
+    String file( "/www/index.html" );
     prefs::AppStati::setHttpActive( true );
     APIWebServer::deliverFileToHttpd( file, request );
   }
@@ -183,18 +185,18 @@ namespace measure_h2o
   void APIWebServer::apiGetTodayData( AsyncWebServerRequest *request )
   {
     elog.log( DEBUG, "%s: getTodayData...", APIWebServer::tag );
+    String &fileName = FileService::getTodayFileName();
     //
-    // maybe ther are write accesses
-    // TODO: implement
-    // if ( xSemaphoreTake( StatusObject::measureFileSem, pdMS_TO_TICKS( 1500 ) ) == pdTRUE )
-    // {
-    //   String file( Prefs::WEB_DAYLY_FILE );
-    //   EnvWebServer::deliverFileToHttpd( file, request );
-    //   xSemaphoreGive( StatusObject::measureFileSem );
-    //   return;
-    // }
-    // String msg = "Can't take semaphore!";
-    String msg = "not implemented (yet)!";
+    // maybe their are write accesses
+    // 
+    if ( xSemaphoreTake( FileService::measureFileSem, pdMS_TO_TICKS( 1500 ) ) == pdTRUE )
+    {
+      APIWebServer::deliverFileToHttpd( fileName, request );
+      xSemaphoreGive( FileService::measureFileSem );
+      return;
+    }
+    String msg = "Can't take semaphore!";
+    // String msg = "not implemented (yet)!";
     APIWebServer::onServerError( request, 303, msg );
   }
 

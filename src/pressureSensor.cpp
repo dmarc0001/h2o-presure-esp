@@ -87,8 +87,6 @@ namespace measure_h2o
     uint32_t cMiliVolts = ( readValuesSum >> 3 );
     prefs::AppStati::setCurrentMiliVolts( cMiliVolts );
     double volts = ( cMiliVolts - prefs::AppStati::getCalibreMinVal() ) / 1000.0;
-    // elog.log( DEBUG, "%s: current: <%02.2fV> - factor <%02.5f>", PrSensor::tag, static_cast< float >( volts ),
-    // static_cast< float >( prefs::AppStati::getCalibreFactor() ) );
     float cBar = volts * prefs::AppStati::getCalibreFactor();
     if ( cBar < 0.0F || cBar > 6.0F )
       prefs::AppStati::setCurrentPressureBar( 0.0F );

@@ -4,6 +4,7 @@ TODO:
 - small api for requests (return json)
   - HTTP-GET /api/v1/version: software version
   - HTTP-GET /api/v1/info : idf/platformio version, count of cpu cores
+  - HTTP-GET /api/v1/today : measure data for round about 24 hours ago
   - HTTP-GET /api/v1/set-timezone?timezone=GMT : set timezone (not working timezone bug)
   - HTTP-GET /api/v1/set-timezone?timezone-offset=3600 : set timezone offset from GMT (workarround for timezone bug)
   - HTTP-GET /api/v1/set-loglevel?level=7 : set controller loglevel, only app
