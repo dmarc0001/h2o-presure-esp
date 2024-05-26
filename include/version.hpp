@@ -1,7 +1,6 @@
 #pragma once
- 
-namespace Prefs
+
+namespace prefs
 {
   constexpr const char *VERSION{ "20240526-test" };
 }
-

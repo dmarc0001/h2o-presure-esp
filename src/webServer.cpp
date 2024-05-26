@@ -12,6 +12,56 @@ namespace measure_h2o
   // instantiate a webserver
   AsyncWebServer APIWebServer::server( 80 );
 
+  const char intervall_html[] PROGMEM = R"rawliteral(
+  <!DOCTYPE HTML>
+  <html lang="de-DE">
+    <head>
+    <title>Messintervall</title>
+    </head>
+    <body>
+    <h1>Intervall der Messungen</h1
+    <h2>%MEASURE_INTERVAL% Sekunden</h2>
+    <br />
+    <br />
+    <span>(c) Dirk Marciniak</span>
+    </body>
+  </html>
+  )rawliteral";
+
+  const char version_html[] PROGMEM = R"rawliteral(
+  <!DOCTYPE HTML>
+  <html lang="de-DE">
+    <head>
+    <title>Server Version</title>
+    </head>
+    <body>
+    <h1>Interne Versionsnummer</h1
+    <h2>%APP_VERSION%</h2>
+    <br />
+    <br />
+    <span>(c) Dirk Marciniak</span>
+    </body>
+  </html>
+  )rawliteral";
+
+  const char info_html[] PROGMEM = R"rawliteral(
+  <!DOCTYPE HTML>
+  <html lang="de-DE">
+    <head>
+    <title>Server Information</title>
+    </head>
+    <body>
+    <h1>Server Informationen</h1>
+    <h2>IDF Version: %IDF_VERSION%</h2>
+    <h2>ESP Model: %ESP_MODEL%</h2>
+    <h2>CORES: %ESP_CORES%</h2>
+    <br />
+    <br />
+    <span>(c) Dirk Marciniak</span>
+    </body>
+  </html>
+  )rawliteral";
+
   /**
    * ini a few things?
    */
@@ -85,18 +135,6 @@ namespace measure_h2o
     if ( parameter.equals( "today" ) )
     {
       APIWebServer::apiGetTodayData( request );
-    }
-    else if ( parameter.equals( "interval" ) )
-    {
-      APIWebServer::apiRestHandlerInterval( request );
-    }
-    else if ( parameter.equals( "version" ) )
-    {
-      APIWebServer::apiVersionInfoGetHandler( request );
-    }
-    else if ( parameter.equals( "info" ) )
-    {
-      APIWebServer::apiSystemInfoGetHandler( request );
     }
     else if ( parameter.equals( "fsstat" ) )
     {
@@ -188,7 +226,7 @@ namespace measure_h2o
     String &fileName = FileService::getTodayFileName();
     //
     // maybe their are write accesses
-    // 
+    //
     if ( xSemaphoreTake( FileService::measureFileSem, pdMS_TO_TICKS( 1500 ) ) == pdTRUE )
     {
       APIWebServer::deliverFileToHttpd( fileName, request );
@@ -197,63 +235,6 @@ namespace measure_h2o
     }
     String msg = "Can't take semaphore!";
     // String msg = "not implemented (yet)!";
-    APIWebServer::onServerError( request, 303, msg );
-  }
-
-  /**
-   * get system inco
-   */
-  void APIWebServer::apiSystemInfoGetHandler( AsyncWebServerRequest *request )
-  {
-    // cJSON *root = cJSON_CreateObject();
-    // esp_chip_info_t chip_info;
-    // esp_chip_info( &chip_info );
-    // cJSON_AddStringToObject( root, "version", IDF_VER );
-    // cJSON_AddNumberToObject( root, "cores", chip_info.cores );
-    // const char *sys_info = cJSON_Print( root );
-    // String info( sys_info );
-    // request->send( 200, "application/json", info );
-    // free( ( void * ) sys_info );
-    // cJSON_Delete( root );
-    // TODO: implement in html
-    String msg = "not implemented (yet)!";
-    APIWebServer::onServerError( request, 303, msg );
-  }
-
-  /**
-   * ask for software vesion
-   */
-  void APIWebServer::apiVersionInfoGetHandler( AsyncWebServerRequest *request )
-  {
-    // cJSON *root = cJSON_CreateObject();
-    // cJSON_AddStringToObject( root, "version", Prefs::VERSION );
-    // const char *sys_info = cJSON_Print( root );
-    // String info( sys_info );
-    // request->send( 200, "application/json", info );
-    // free( ( void * ) sys_info );
-    // cJSON_Delete( root );
-    // TODO: implement in html
-    String msg = "not implemented (yet)!";
-    APIWebServer::onServerError( request, 303, msg );
-  }
-  /**
-   * return jsom object with measure interval
-   */
-  void APIWebServer::apiRestHandlerInterval( AsyncWebServerRequest *request )
-  {
-    elog.log( DEBUG, "%s: request measure interval...", APIWebServer::tag );
-    // cJSON *root = cJSON_CreateObject();
-    // char buffer[ 8 ];
-    // sprintf( &buffer[ 0 ], "%04d", Prefs::MEASURE_INTERVAL_SEC );
-    // cJSON_AddStringToObject( root, "interval", &buffer[ 0 ] );
-    // char *int_info = cJSON_PrintUnformatted( root );  // cJSON_Print(root);
-    // String info( int_info );
-    // request->send( 200, "application/json", info );
-    // cJSON_Delete( root );
-    // cJSON_free( int_info );  //!!!! important, memory leak
-    elog.log( DEBUG, "%s: request interval  <%04d>...", APIWebServer::tag, prefs::AppStati::getMeasureInterval_s() );
-    // TODO: implement in html
-    String msg = "not implemented (yet)!";
     APIWebServer::onServerError( request, 303, msg );
   }
 
@@ -311,7 +292,8 @@ namespace measure_h2o
     //
     if ( !SPIFFS.exists( filePath ) )
     {
-      return APIWebServer::handleNotPhysicFileSources( filePath, request );
+      APIWebServer::handleNotPhysicFileSources( filePath, request );
+      return;
     }
     //
     // set content type of file
@@ -336,6 +318,22 @@ namespace measure_h2o
   void APIWebServer::handleNotPhysicFileSources( String &filePath, AsyncWebServerRequest *request )
   {
     // TODO: implemtieren von virtuellen datenpdaden
+    if ( filePath == "/version.html" )
+    {
+      request->send_P( 200, "text/html", version_html, APIWebServer::tProcessor );
+      return;
+    }
+    else if ( filePath == "/info.html" )
+    {
+      request->send_P( 200, "text/html", info_html, APIWebServer::tProcessor );
+      return;
+    }
+    else if ( filePath == "/intervall.html" )
+    {
+      request->send_P( 200, "text/html", intervall_html, APIWebServer::tProcessor );
+      return;
+    }
+
     APIWebServer::onNotFound( request );
   }
 
@@ -431,4 +429,57 @@ namespace measure_h2o
     return type;
   }
 
+  String APIWebServer::tProcessor( const String &var )
+  {
+    if ( var == "APP_VERSION" )
+    {
+      String versionStr( prefs::VERSION );
+      return versionStr;
+    }
+    else if ( var == "IDF_VERSION" )
+    {
+      String versionStr( IDF_VER );
+      return versionStr;
+    }
+    else if ( var == "ESP_MODEL" )
+    {
+      esp_chip_info_t chip_info;
+      esp_chip_info( &chip_info );
+      String model( "-" );
+      switch ( chip_info.model )
+      {
+        default:
+        case CHIP_ESP32:
+          model = "ESP32";
+          break;
+        case CHIP_ESP32S2:
+          model = "ESP32-S2";
+          break;
+        case CHIP_ESP32S3:
+          model = "ESP32-S3";
+          break;
+        case CHIP_ESP32C3:
+          model = "ESP32-C3";
+          break;
+        case CHIP_ESP32H2:
+          model = "ESP32-H2";
+          break;
+      }
+      return model;
+    }
+    else if ( var == "ESP_CORES" )
+    {
+      esp_chip_info_t chip_info;
+      esp_chip_info( &chip_info );
+      String coresCount( chip_info.cores );
+      return coresCount;
+    }
+    else if ( var == "MEASURE_INTERVAL" )
+    {
+      String interval( prefs::MEASURE_DIFF_TIME_S );
+      return interval;
+    }
+
+    return String();
+  }
 }  // namespace measure_h2o

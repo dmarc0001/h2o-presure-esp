@@ -1,5 +1,6 @@
 #pragma once
 #include "driver/gpio.h"
+#include "version.hpp"
 
 namespace prefs
 {

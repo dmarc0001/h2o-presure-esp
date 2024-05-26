@@ -23,9 +23,6 @@ namespace measure_h2o
     static void onApiV1Set( AsyncWebServerRequest * );                            //! set a few things vis REST
     static void onFilesReq( AsyncWebServerRequest * );                            //! on some file
     static void apiGetTodayData( AsyncWebServerRequest * );                       //! on api get today data
-    static void apiSystemInfoGetHandler( AsyncWebServerRequest * );               //! deliver server info
-    static void apiVersionInfoGetHandler( AsyncWebServerRequest * );              //! deliver esp infos
-    static void apiRestHandlerInterval( AsyncWebServerRequest * );                //! deliver measure interval
     static void apiRestHandlerCurrent( AsyncWebServerRequest * );                 //! deliver acku current
     static void apiRestFilesystemCheck( AsyncWebServerRequest * );                //! trigger the filesystem checker...
     static void apiRestFilesystemStatus( AsyncWebServerRequest * );               //! get an overview for filesystem as json
@@ -34,6 +31,7 @@ namespace measure_h2o
     static String setContentTypeFromFile( String &, const String & );             //! find content type
     static void onNotFound( AsyncWebServerRequest * );                            //! if page not found
     static void onServerError( AsyncWebServerRequest *, int, const String & );    //! if server error
+    static String tProcessor( const String & );                                   //! minimalistic template processor
   };
 
 }  // namespace measure_h2o

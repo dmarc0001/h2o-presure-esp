@@ -6,7 +6,7 @@ DESTFILE=../include/version.hpp
 
 echo "#pragma once" > $DESTFILE
 echo " " >> $DESTFILE
-echo "namespace Prefs" >> $DESTFILE
+echo "namespace prefs" >> $DESTFILE
 echo "{" >> $DESTFILE
 VERSION=`git describe`
 echo "  constexpr const char *VERSION{ \"$VERSION\" };" >> $DESTFILE
