@@ -17,13 +17,20 @@ namespace measure_h2o
   <html lang="de-DE">
     <head>
     <title>Messintervall</title>
+    <meta name="description" content="water pressure monitor" />
+    <meta name="keywords" content="save presure values" />
+    <meta name="author" content="Dirk Marciniak" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="presure.css">
     </head>
     <body>
     <h1>Intervall der Messungen</h1
-    <h2>%MEASURE_INTERVAL% Sekunden</h2>
+    <h3>%MEASURE_INTERVAL% Sekunden</h3>
     <br />
     <br />
-    <span>(c) Dirk Marciniak</span>
+    <div class="footnote">
+    (c) Dirk Marciniak
+    </div>
     </body>
   </html>
   )rawliteral";
@@ -33,13 +40,20 @@ namespace measure_h2o
   <html lang="de-DE">
     <head>
     <title>Server Version</title>
+    <meta name="description" content="water pressure monitor" />
+    <meta name="keywords" content="save presure values" />
+    <meta name="author" content="Dirk Marciniak" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="presure.css">
     </head>
     <body>
-    <h1>Interne Versionsnummer</h1
-    <h2>%APP_VERSION%</h2>
+    <h1>Interne Versionsnummer</h1>
+    <h3>Version: %APP_VERSION%</h3>
     <br />
     <br />
-    <span>(c) Dirk Marciniak</span>
+    <div class="footnote">
+    (c) Dirk Marciniak
+    </div>
     </body>
   </html>
   )rawliteral";
@@ -49,15 +63,22 @@ namespace measure_h2o
   <html lang="de-DE">
     <head>
     <title>Server Information</title>
+    <meta name="description" content="water pressure monitor" />
+    <meta name="keywords" content="save presure values" />
+    <meta name="author" content="Dirk Marciniak" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="presure.css">
     </head>
     <body>
     <h1>Server Informationen</h1>
-    <h2>IDF Version: %IDF_VERSION%</h2>
-    <h2>ESP Model: %ESP_MODEL%</h2>
-    <h2>CORES: %ESP_CORES%</h2>
+    <h3>IDF Version: %IDF_VERSION%</h3>
+    <h3>ESP Model: %ESP_MODEL%</h3>
+    <h3>CORES: %ESP_CORES%</h3>
     <br />
     <br />
-    <span>(c) Dirk Marciniak</span>
+    <div class="footnote">
+    (c) Dirk Marciniak
+    </div>
     </body>
   </html>
   )rawliteral";
