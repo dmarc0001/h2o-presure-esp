@@ -1,11 +1,4 @@
-<<<<<<< HEAD
 .pio
 .vscode/
 tools/today/
-=======
-.pio/
-.vscode/
-tools/today
 
->>>>>>> main
-.vscode/c_cpp_properties.json
