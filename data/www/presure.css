@@ -1,0 +1,32 @@
+/**** body ****/
+body {
+  background-color: #7ab6eb;
+  color: #00294d;
+  margin-top: 47px;
+  margin-bottom: 47px;
+  font-family: Arial, Helvetica, sans-serif;
+  z-index: 0;
+}
+a::before {
+  content: '[ ';
+}
+a::after {
+  content: ' ]';
+}
+a {
+  color: #00294d;
+  font-weight: bold;
+  text-decoration: none;
+}
+a:hover {
+  background-color: #b6cee2;
+  color: #f11a5e;
+}
+ul.list {
+  font-family: 'Courier New', Courier, monospace;
+}
+div.footnote {
+  color: #4d4747;
+  font-size: small;
+  padding-left: 15em;
+}
