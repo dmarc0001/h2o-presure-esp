@@ -1,4 +1,5 @@
-.pio
+.pio/
+./.vscode/
 .vscode/
 tools/today/
 
