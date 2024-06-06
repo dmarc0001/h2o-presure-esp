@@ -7,26 +7,46 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   z-index: 0;
 }
+
+li {
+  margin-top: 0.8em;
+}
+
 a::before {
   content: '[ ';
 }
+
 a::after {
   content: ' ]';
 }
+
 a {
   color: #00294d;
   font-weight: bold;
   text-decoration: none;
 }
+
 a:hover {
   background-color: #b6cee2;
   color: #f11a5e;
 }
+
 ul.list {
   font-family: 'Courier New', Courier, monospace;
 }
+
 div.footnote {
   color: #4d4747;
   font-size: small;
   padding-left: 15em;
+}
+
+div.code {
+  margin-top: 0.15em;
+  margin-bottom: 0.4em;
+  padding: 0.5em;
+  color: #3b3b3b;
+  font-size: small;
+  background-color: rgba(0, 0, 0, 0.112);
+  max-width: 35em;
 }

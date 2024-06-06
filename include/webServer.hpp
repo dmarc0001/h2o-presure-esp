@@ -23,7 +23,8 @@ namespace measure_h2o
     static void onApiV1Set( AsyncWebServerRequest * );                            //! set a few things vis REST
     static void onFilesReq( AsyncWebServerRequest * );                            //! on some file
     static void apiGetTodayData( AsyncWebServerRequest * );                       //! on api get today data
-    static void apiRestHandlerCurrent( AsyncWebServerRequest * );                 //! deliver acku current
+    static void apiGetRestInterval( AsyncWebServerRequest * );                    //! on api get mesure interval
+    static void apiGetRestDataFileFrom( AsyncWebServerRequest * );                //! get data file from date (if availible)
     static void apiRestFilesystemCheck( AsyncWebServerRequest * );                //! trigger the filesystem checker...
     static void apiRestFilesystemStatus( AsyncWebServerRequest * );               //! get an overview for filesystem as json
     static void deliverFileToHttpd( String &, AsyncWebServerRequest * );          //! deliver content file via http

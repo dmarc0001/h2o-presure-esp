@@ -72,11 +72,13 @@ namespace prefs
       return AppStati::wlanState;
     }
     static String getTimeZone();                   //! get my timezone
-    static bool setTimeZone( String & );           //! set my timezone
+    static bool setTimeZone( const String & );     //! set my timezone
+    static bool setTimezoneOffset( long );         //! set timezione offst instread of timezone
+    static long getTimezoneOffset();               //! get the offset for timezone
     static uint8_t getLogLevel();                  //! get Logging
     static bool setLogLevel( uint8_t );            //! set Logging
     static uint32_t getMeasureInterval_s();        //! get interval bwtween two measures
-    static void setMeasureInterval_s( uint32_t );  //! set Interval bewtween two measures
+    static bool setMeasureInterval_s( uint32_t );  //! set Interval bewtween two measures
     private:
     static bool getIfPrefsInit();        //! internal, is preferences initialized?
     static bool setIfPrefsInit( bool );  //! internal, set preferences initialized?

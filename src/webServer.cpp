@@ -108,8 +108,8 @@ namespace measure_h2o
     //
     APIWebServer::server.on( "^/$", HTTP_GET, APIWebServer::onIndex );
     APIWebServer::server.on( "^/index\\.html$", HTTP_GET, APIWebServer::onIndex );
-    APIWebServer::server.on( "^\\/api\\/v1\\/(.*)$", HTTP_GET, APIWebServer::onApiV1 );
     APIWebServer::server.on( "^\\/api\\/v1\\/set-(.*)\?(.*)$", HTTP_GET, APIWebServer::onApiV1Set );
+    APIWebServer::server.on( "^\\/api\\/v1\\/(.*)$", HTTP_GET, APIWebServer::onApiV1 );
     APIWebServer::server.on( "^\\/.*$", HTTP_GET, APIWebServer::onFilesReq );
     APIWebServer::server.onNotFound( APIWebServer::onNotFound );
     APIWebServer::server.begin();
@@ -157,13 +157,22 @@ namespace measure_h2o
     {
       APIWebServer::apiGetTodayData( request );
     }
+    else if ( parameter.equals( "data" ) )
+    {
+      APIWebServer::apiGetRestDataFileFrom( request );
+    }
+    else if ( parameter.equals( "interval" ) )
+    {
+      APIWebServer::apiGetRestInterval( request );
+    }
     else if ( parameter.equals( "fsstat" ) )
     {
       APIWebServer::apiRestFilesystemStatus( request );
     }
     else
     {
-      request->send( 300, "text/plain", "fail api call v1 for <" + parameter + ">" );
+      String msg = "ERROR api call v1 for <" + parameter + ">";
+      APIWebServer::onServerError( request, 303, msg );
     }
   }
 
@@ -187,19 +196,45 @@ namespace measure_h2o
       {
         String timezone = request->getParam( "timezone" )->value();
         elog.log( DEBUG, "%s: set-timezone, param: %s", APIWebServer::tag, timezone.c_str() );
-        prefs::AppStati::setTimeZone( timezone );
-        request->send( 200, "text/plain", "OK api call v1 for <set-" + verb + ">" );
-        setenv( "TZ", timezone.c_str(), 1 );
-        tzset();
-        yield();
-        sleep( 1 );
-        ESP.restart();
+        if ( prefs::AppStati::setTimeZone( timezone ) )
+        {
+          request->send( 200, "text/plain",
+                         "OK api call v1 for <set-" + verb + "> = <" + timezone + "> BUT: not functional on this chip!" );
+          setenv( "TZ", timezone.c_str(), 1 );
+          tzset();
+          // delay( 500 );
+          // ESP.restart();
+        }
+        else
+        {
+          String msg = "ERROR api call v1 for <set-" + verb + "> = <" + timezone + ">";
+          APIWebServer::onServerError( request, 303, msg );
+        }
+        return;
+      }
+      // timezone offset parameter find
+      else if ( request->hasParam( "timezone-offset" ) )
+      {
+        String timezone = request->getParam( "timezone-offset" )->value();
+        elog.log( DEBUG, "%s: set-%s, param: %s", APIWebServer::tag, verb.c_str(), timezone.c_str() );
+        if ( prefs::AppStati::setTimezoneOffset( timezone.toInt() ) )
+        {
+          request->send( 200, "text/plain", "OK api call v1 for <set-" + verb + "> = <" + timezone + ">" );
+          yield();
+          sleep( 1 );
+          ESP.restart();
+        }
+        else
+        {
+          String msg = "ERROR api call v1 for <set-" + verb + "> = <" + timezone + ">";
+          APIWebServer::onServerError( request, 303, msg );
+        }
         return;
       }
       else
       {
-        elog.log( ERROR, "%s: set-timezone, param not found!", APIWebServer::tag );
-        request->send( 300, "text/plain", "api call v1 for <set-" + verb + "> param not found!" );
+        String msg = "api call v1 for <set-" + verb + "> param not found!";
+        APIWebServer::onServerError( request, 303, msg );
         return;
       }
     }
@@ -220,16 +255,24 @@ namespace measure_h2o
       }
       else
       {
-        elog.log( ERROR, "%s: set-loglevel, param not found!", APIWebServer::tag );
-        request->send( 300, "text/plain", "api call v1 for <set-" + verb + "> param not found!" );
+        String msg = "api call v1 for <set-" + verb + "> param not found!";
+        APIWebServer::onServerError( request, 303, msg );
         return;
       }
     }
     else if ( verb.equals( "interval" ) )
     {
-      // TODO: implement!
-      String msg = "not implemented (yet)!";
-      APIWebServer::onServerError( request, 303, msg );
+      String interval = request->getParam( "interval" )->value();
+      elog.log( DEBUG, "%s: set-loglevel, param: %s", APIWebServer::tag, interval.c_str() );
+      uint32_t numLevel = static_cast< uint32_t >( interval.toInt() );
+      if ( prefs::AppStati::setMeasureInterval_s( numLevel ) )
+      {
+        FileService::deleteTodayFile();
+        request->send( 200, "text/plain", "OK api call v1 for <set-" + verb + ">" );
+        yield();
+        sleep( 1 );
+        ESP.restart();
+      }
       return;
     }
     else
@@ -255,8 +298,62 @@ namespace measure_h2o
       return;
     }
     String msg = "Can't take semaphore!";
-    // String msg = "not implemented (yet)!";
+    elog.log( CRITICAL, "%s: %s", APIWebServer::tag, msg );
     APIWebServer::onServerError( request, 303, msg );
+  }
+
+  /**
+   * get Datafile from date, if availible
+   */
+  void APIWebServer::apiGetRestDataFileFrom( AsyncWebServerRequest *request )
+  {
+    elog.log( DEBUG, "%s: apiGetRestDataFileFrom...", APIWebServer::tag );
+    if ( request->hasParam( "from" ) )
+    {
+      String dateNameStr = request->getParam( "from" )->value().substring( 0, 10 );
+      String fileName( "/data/" );
+      fileName += dateNameStr;
+      fileName += "-pressure.csv";
+      elog.log( DEBUG, "%s: apiGetRestDataFileFrom try to deliver <%s>...", APIWebServer::tag, fileName.c_str() );
+      if ( SPIFFS.exists( fileName ) )
+      {
+        //
+        // maybe their are write accesses
+        //
+        if ( xSemaphoreTake( FileService::measureFileSem, pdMS_TO_TICKS( 1500 ) ) == pdTRUE )
+        {
+          APIWebServer::deliverFileToHttpd( fileName, request );
+          xSemaphoreGive( FileService::measureFileSem );
+          return;
+        }
+        String msg = "Can't take semaphore!";
+        APIWebServer::onServerError( request, 303, msg );
+        return;
+      }
+      String msg = "File <";
+      msg += fileName.substring( 6 );
+      msg += "> don't exist!";
+      APIWebServer::onServerError( request, 303, msg );
+      return;
+    }
+    else
+    {
+      String msg = "no param <from> sent!";
+      APIWebServer::onServerError( request, 303, msg );
+    }
+  }
+
+  /**
+   * get measure interval from server
+   */
+  void APIWebServer::apiGetRestInterval( AsyncWebServerRequest *request )
+  {
+    uint32_t interval = prefs::AppStati::getMeasureInterval_s();
+    elog.log( DEBUG, "%s: apiGetRestInterval (%03d)...", APIWebServer::tag, interval );
+    char buffer[ 15 ];
+    snprintf( buffer, 15, "INTERVAL: %03d", static_cast< int >( interval ) );
+    request->send( 200, "text/plain", buffer );
+    return;
   }
 
   void APIWebServer::apiRestFilesystemStatus( AsyncWebServerRequest *request )

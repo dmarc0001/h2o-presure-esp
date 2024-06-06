@@ -78,6 +78,26 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * delete todays file (e.g. set measure interval)
+   */
+  bool FileService::deleteTodayFile()
+  {
+    if ( xSemaphoreTake( FileService::measureFileSem, pdMS_TO_TICKS( 6000 ) ) == pdTRUE )
+    {
+      String fName = FileService::getTodayFileName();
+      if ( fName )
+      {
+        SPIFFS.remove( fName );
+        xSemaphoreGive( FileService::measureFileSem );
+        return true;
+      }
+      xSemaphoreGive( FileService::measureFileSem );
+      return false;
+    }
+    return false;
+  }
+
   int FileService::saveDatasets()
   {
     int savedCount{ 0 };

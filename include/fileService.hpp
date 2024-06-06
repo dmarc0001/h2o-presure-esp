@@ -25,6 +25,7 @@ namespace measure_h2o
     public:
     static void init();
     static String &getTodayFileName();
+    static bool deleteTodayFile();
 
     private:
     static void start();

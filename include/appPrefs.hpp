@@ -19,6 +19,8 @@ namespace prefs
 #endif
   constexpr const char *APPNAME = "PRESSURE";                                                    //! application name
   constexpr const char *DEFAULT_HOSTNAME = "esp_h2o";                                            //! default hostname
+  constexpr const char *NTP_POOL_01{ "pool.ntp.org" };                                           //! ntp pool
+  constexpr const char *NTP_POOL_00{ "de.pool.ntp.org" };                                        //! ntp pool
   constexpr int LED_NUM = 1;                                                                     //! only one LED internal
   constexpr gpio_num_t PRESSURE_GPIO = GPIO_NUM_0;                                               //! analog read pressure
   constexpr uint8_t PRESSURE_RES = 12;                                                           //! resulution für current

@@ -43,10 +43,11 @@ void setup()
   FileService::init();
   //
   // timezone settings
+  // not correct functional on this chip :-(
   //
-  elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
-  setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
-  tzset();
+  // elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
+  // setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
+  // tzset();
   //
   // led stripe settings
   //
@@ -71,12 +72,12 @@ void setup()
   elog.log( INFO, "main: hostname: <%s>...", hName.c_str() );
   elog.log( DEBUG, "main: start wifi..." );
   String msg( "start APP..." );
-  sleep(3);
+  sleep( 3 );
   display->printLine( msg );
   msg = "init WIFI...";
   display->printLine( msg );
   WifiConfig::init();
-  sleep(2);
+  sleep( 2 );
   display->printGreeting();
   //
   //  random init

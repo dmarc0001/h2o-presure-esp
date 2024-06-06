@@ -8,12 +8,13 @@ namespace prefs
   //
   // constants for prefs save
   //
-  constexpr const char *CHECKVAL{ "confInit" };
+  constexpr const char *CHECKVAL{ "conf_init" };
   constexpr const char *INITVAL{ "wasInit" };
 
-  constexpr const char *DEBUGSETTING{ "debugging" };
+  constexpr const char *DEBUGSETTING{ "debugval" };
   constexpr const char *LOC_HOSTNAME{ "hostname" };
-  constexpr const char *LOC_TIMEZONE{ "timezone" };
+  constexpr const char *LOC_TIMEZONE{ "loc_tz" };
+  constexpr const char *LOC_TIME_OFFSET{ "loc_tmz_offs" };
   constexpr const char *CAL_MINVAL{ "cal_min" };
   constexpr const char *CAL_MAXVAL{ "cal_max" };
   constexpr const char *CAL_FACTOR{ "cal_factor" };
@@ -48,11 +49,13 @@ namespace prefs
       String hn( &hostname[ 0 ] );
       AppStati::lPref.putString( LOC_HOSTNAME, hn );
       AppStati::lPref.putString( LOC_TIMEZONE, "GMT" );
+      AppStati::lPref.putLong( LOC_TIME_OFFSET, 0L );
       AppStati::lPref.putUInt( CAL_MINVAL, PRESSURE_MIN_MILIVOLT );
       AppStati::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
       AppStati::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
       AppStati::lPref.putUInt( MEASURE_TIMEDIFF, MEASURE_DIFF_TIME_S );
       Serial.println( "first-time-init preferences...DONE" );
+      AppStati::setIfPrefsInit( true );
     }
     AppStati::wasInit = true;
   }
@@ -166,11 +169,27 @@ namespace prefs
   }
 
   /**
+   * set locval timezone offset
+   */
+  bool AppStati::setTimezoneOffset( long _offset )
+  {
+    return ( AppStati::lPref.putLong( LOC_TIME_OFFSET, _offset ) > 0 );
+  }
+
+  /**
+   * get local timezone offset
+   */
+  long AppStati::getTimezoneOffset()
+  {
+    return AppStati::lPref.getLong( LOC_TIME_OFFSET, 0L );
+  }
+
+  /**
    * set local timezone
    */
-  bool AppStati::setTimeZone( String &_zone )
+  bool AppStati::setTimeZone( const String &_lzone )
   {
-    return ( AppStati::lPref.putString( LOC_TIMEZONE, _zone ) > 0 );
+    return ( AppStati::lPref.putString( LOC_TIMEZONE, _lzone.c_str() ) > 0 );
   }
 
   uint8_t AppStati::getLogLevel()
@@ -192,9 +211,9 @@ namespace prefs
     return AppStati::lPref.getUInt( MEASURE_TIMEDIFF, MEASURE_DIFF_TIME_S );
   }
 
-  void AppStati::setMeasureInterval_s( uint32_t _val )
+  bool AppStati::setMeasureInterval_s( uint32_t _val )
   {
-    AppStati::lPref.putUInt( MEASURE_TIMEDIFF, _val );
+    return(AppStati::lPref.putUInt( MEASURE_TIMEDIFF, _val ) > 0 );
   }
 
 }  // namespace prefs

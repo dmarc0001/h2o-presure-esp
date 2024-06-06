@@ -15,13 +15,72 @@
   <H1>Wasserdruck</H1>
   <div class="list">
     <ul class="list">
-      <li><a href="/version.html">Version der Software</a></li>
-      <li><a href="/info.html">Controller/Server Info</a></li>
-      <li><a href="/intervall.html">Intervall der Messungen</a></li>
-      <li><a href="/api/v1/today">Daten von HEUTE</a></li>
-      <li><a href="/api/v1/set-timezone?timezone=GMT">Setzte Zeitzohne (hier GMT)</a></li>
-      <li><a href="/api/v1/set-loglevel?level=7">Setzte loglevel der App (via usb)</a></li>
-      <li><a href="/api/v1/set-interval?interval=10">Setzte Messintervall</a></li>
+      <li>
+        <a href="/version.html">
+          Version der Software</a>
+        <div class="code">
+          "/version.html"
+        </div>
+      </li>
+      <li>
+        <a href="/info.html">
+          Controller/Server Info</a>
+        <div class="code">
+          "/info.html"
+        </div>
+      </li>
+      <li><a href="/api/v1/interval">
+          Erfrage Intervall der Messungen</a></li>
+      <div class="code">
+        "/api/v1/interval"
+      </div>
+
+      <li>
+        <a href="/api/v1/today">Daten von HEUTE</a>
+        <div class="code">
+          "/api/v1/today"
+        </div>
+      </li>
+      <li>
+        <a href="/api/v1/set-timezone?timezone-offset=3600">
+          Setzte Zeitzohne (hier Berlin, Normalzeit)</a>
+        <br />
+        <div class="code">
+          "/api/v1/set-timezone?timezone-offset=3600"
+        </div>
+      </li>
+      <li>
+        <a href="/api/v1/set-timezone?timezone-offset=7200">
+          Setzte Zeitzohne (hier Berlin, Sommerzeit)</a>
+        <br />
+        <div class="code">
+          "/api/v1/set-timezone?timezone-offset=7200"
+        </div>
+      </li>
+      <li>
+        <a href="/api/v1/set-loglevel?level=7">
+          Setzte loglevel der App (via usb)</a>
+        <br />
+        <div class="code">
+          "/api/v1/set-loglevel?level=7"<br /><br />
+          EMERGENCY = 0 <br />
+          ALERT = 1,<br />
+          CRITICAL = 2,<br />
+          ERROR = 3,<br />
+          WARNING = 4,<br />
+          NOTICE = 5,<br />
+          INFO = 6,<br />
+          DEBUG = 7
+        </div>
+      </li>
+      <li>
+        <a href="/api/v1/set-interval?interval=10">
+          Setzte Messintervall in Sekunden</a>
+        <div class="code">
+          "/api/v1/set-interval?interval=XX"
+        </div>
+
+      </li>
     </ul>
   </div>
 
