@@ -13,6 +13,8 @@ namespace measure_h2o
       , printedAlert{ false }
       , printedMessage{ false }
       , showMeasureMark{ false }
+      , firstLine()
+      , secondLine()
   {
     elog.log( DEBUG, "%s: MLCD init...", MLCD::tag );
     Wire.setPins( _sda, _scl );
@@ -53,12 +55,23 @@ namespace measure_h2o
     this->send_string( "   S T A R T    " );
   }
 
+  void MLCD::printLine( String &_line )
+  {
+    clear();
+    secondLine = firstLine;
+    firstLine = _line.substring( 0, 16 );
+    this->setCursor( 0, 1 );
+    this->send_string( firstLine.c_str() );
+    this->setCursor( 0, 0 );
+    this->send_string( secondLine.c_str() );
+  }
+
   void MLCD::printPresure( float _pressureBar )
   {
     if ( !printedPresureTitle )
     {
       this->setCursor( 0, 1 );
-      this->send_string( "Druck:     bar " );
+      this->send_string( "Druck:     bar  " );
       printedPresureTitle = true;
       printedAlert = false;
       printedMessage = false;
@@ -78,7 +91,7 @@ namespace measure_h2o
     if ( !printedTension )
     {
       this->setCursor( 0, 0 );
-      this->send_string( "Spng:      V  " );
+      this->send_string( "Spng:      V    " );
       printedTension = true;
       printedAlert = false;
       printedMessage = false;
@@ -120,22 +133,6 @@ namespace measure_h2o
         this->write_char( 0 );
         beat = 0;
         break;
-
-        // case 4:
-        // this->write_char( '|' );
-        // break;
-
-        // case 5:
-        // this->write_char( '/' );
-        // break;
-
-        // case 6:
-        // this->write_char( '-' );
-        // break;
-
-        // case 7:
-        // this->write_char( '\\' );
-        // break;
     }
   }
 

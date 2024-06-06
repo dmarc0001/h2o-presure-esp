@@ -70,15 +70,17 @@ void setup()
   static String hName( prefs::AppStati::getHostName() );
   elog.log( INFO, "main: hostname: <%s>...", hName.c_str() );
   elog.log( DEBUG, "main: start wifi..." );
-  String msg( "init WIFI..." );
-  display->clear();
-  display->printMessage( msg );
-
+  String msg( "start APP..." );
+  sleep(3);
+  display->printLine( msg );
+  msg = "init WIFI...";
+  display->printLine( msg );
   WifiConfig::init();
+  sleep(2);
+  display->printGreeting();
   //
   //  random init
   //
-  display->printGreeting();
   randomSeed( analogRead( prefs::RAND_PIN ) );
   //
   // timeLib sync Time width system
@@ -94,8 +96,7 @@ void loop()
   using namespace measure_h2o;
 
   static uint64_t setNextTimeCorrect{ ( 1000ULL * 1000ULL * 21600ULL ) };
-  static auto connected = WlanState::DISCONNECTED;
-  static uint64_t nextTimeToShowColors = DELAYTIME;
+  static uint64_t nextTimeToDisplayValues = DELAYTIME;
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
   static uint64_t nextAntTime = ANTTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
@@ -122,12 +123,12 @@ void loop()
       nextTimeCalibrCheck = nowTime + 10000000ULL;
   }
 
-  if ( nowTime > nextTimeToShowColors )
+  if ( nowTime > nextTimeToDisplayValues )
   {
     //
     // lets actualize the preasure display
     //
-    nextTimeToShowColors = nowTime + DELAYTIME;
+    nextTimeToDisplayValues = nowTime + DELAYTIME;
     checkOnlineState();
     auto result = showColors();
     updateDisplay();
@@ -147,7 +148,7 @@ void loop()
     display->printHartbeat();
   }
   //
-  // ant symbol
+  // antenna symbol
   //
   if ( nowTime > nextAntTime )
   {
@@ -160,7 +161,7 @@ void loop()
       if ( antMarkShow )
       {
         display->printAntMark();
-        nextAntTime = nowTime + (ANTTIME << 1);
+        nextAntTime = nowTime + ( ANTTIME << 1 );
       }
       else
       {
@@ -174,7 +175,10 @@ void loop()
     }
   }
 }
-//
+
+/**
+ * zyclic called function to set time from NTP
+ */
 time_t getNtpTime()
 {
   struct tm ti;
@@ -187,7 +191,7 @@ time_t getNtpTime()
 }
 
 /**
- * correct time
+ * correct time for logger
  */
 void correctTime()
 {
@@ -223,6 +227,9 @@ int controlCalibr()
     // there was an low impulse, is this permanent
     //
     elog.log( DEBUG, "main: calibrating requested???" );
+    //
+    // wait for mechanic switch
+    //
     delay( 20 );
     //
     // after that, always low?
@@ -230,6 +237,10 @@ int controlCalibr()
     cl_switch = digitalRead( prefs::CALIBR_REQ_PIN );
     if ( cl_switch == LOW )
     {
+      //
+      // TODO: wait for key UP
+      // TODO: long keydown RESET device
+      //
       String msg( "Druck erkannt!" );
       String nix( "nicht moeglich" );
       // maybe i can calibr?
@@ -256,6 +267,9 @@ int controlCalibr()
         elog.log( DEBUG, "main: call calibre routine..." );
         String msg( "calibriere..." );
         display->printMessage( msg );
+        //
+        // calibrating sensor
+        //
         PrSensor::calibreSensor();
         msg = "fertig...       ";
         display->printMessage( msg );
@@ -299,6 +313,7 @@ void checkOnlineState()
 {
   using namespace measure_h2o;
   static WlanState currWLANState{ WlanState::DISCONNECTED };
+  String msg;
 
   if ( currWLANState != prefs::AppStati::getWlanState() )
   {
@@ -310,6 +325,18 @@ void checkOnlineState()
       //
       if ( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED )
       {
+        if ( new_connected == WlanState::CONNECTED )
+        {
+          msg = "WiFi verbunden!";
+          display->printLine( msg );
+          msg = "Warte auf TIME";
+          display->printLine( msg );
+        }
+        else
+        {
+          msg = "Zeit sync OK!";
+          display->printLine( msg );
+        }
         //
         // new connection, start webservice
         //
@@ -318,6 +345,8 @@ void checkOnlineState()
       }
       else
       {
+        msg = "WiFi getrennt!";
+        display->printLine( msg );
         elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
         APIWebServer::stop();
       }
@@ -332,6 +361,8 @@ void checkOnlineState()
         //
         // not longer functional
         //
+        msg = "WiFi getrennt!";
+        display->printLine( msg );
         elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
         APIWebServer::stop();
       }

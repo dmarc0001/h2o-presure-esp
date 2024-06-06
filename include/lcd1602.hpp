@@ -16,6 +16,7 @@ namespace measure_h2o
     bool showMeasureMark;
     float lastPressure;
     float lastTension;
+    String firstLine, secondLine;
 
     public:
     MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
@@ -29,6 +30,7 @@ namespace measure_h2o
     void printAlert( String & );
     void printMessage( String & );
     void printGreeting();
+    void printLine( String & );
     void printAntMark();
     void hideAntMark();
   };
