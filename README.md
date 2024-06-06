@@ -14,8 +14,6 @@ TODO:
   - HTTP-GET /api/v1/set-loglevel?level=7 : set controller loglevel, only app
   - HTTP-GET /api/v1/set-interval?interval=10 : set measure interval
   
-
-
 ## liglevels (numeric)
     EMERGENCY = 0,
     ALERT = 1,
