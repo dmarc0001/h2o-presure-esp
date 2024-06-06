@@ -33,6 +33,7 @@ namespace measure_h2o
   void FileService::start()
   {
     elog.log( INFO, "%s: Task start...", FileService::tag );
+    delay( 10 );
 
     if ( FileService::taskHandle )
     {
