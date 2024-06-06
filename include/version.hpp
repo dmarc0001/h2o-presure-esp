@@ -2,6 +2,6 @@
  
 namespace prefs
 {
-  constexpr const char *VERSION{ "20240526-created-webservice" };
+  constexpr const char *VERSION{ "2024-06-06-webservices-implemented" };
 }
 
