@@ -167,7 +167,11 @@ namespace measure_h2o
     }
     else if ( parameter.equals( "fsstat" ) )
     {
-      APIWebServer::apiRestFilesystemStatus( request );
+      APIWebServer::apiGetRestFilesystemStatus( request );
+    }
+    else if ( parameter.equals( "led" ) )
+    {
+      APIWebServer::apiGetRestLedBrightness( request );
     }
     else
     {
@@ -275,6 +279,28 @@ namespace measure_h2o
       }
       return;
     }
+    else if ( verb.equals( "led" ) )
+    {
+      if ( request->hasParam( "brightness" ) )
+      {
+        String brightness = request->getParam( "brightness" )->value();
+        elog.log( DEBUG, "%s: set-%s, param: %s", APIWebServer::tag, verb, brightness.c_str() );
+        uint8_t br = static_cast< uint8_t >( brightness.toInt() & 0xff );
+        if ( prefs::AppStati::setLedBrightness( br ) )
+        {
+          request->send( 200, "text/plain", "OK api call v1 for <set-" + verb + ">" );
+          yield();
+          sleep( 1 );
+          ESP.restart();
+          return;
+        }
+        else
+        {
+          request->send( 300, "text/plain", "fail api call v1 for <set-" + verb + ">" );
+          return;
+        }
+      }
+    }
     else
     {
       request->send( 300, "text/plain", "fail api call v1 for <set-" + verb + ">" );
@@ -344,6 +370,19 @@ namespace measure_h2o
   }
 
   /**
+   * get the led stripe brightness
+   */
+  void APIWebServer::apiGetRestLedBrightness( AsyncWebServerRequest *request )
+  {
+    uint8_t br = prefs::AppStati::getLedBrightness();
+    elog.log( DEBUG, "%s: apiGetRestLedBrightness (%03d)...", APIWebServer::tag, br );
+    char buffer[ 18 ];
+    snprintf( buffer, 18, "BRIGHTNESS: %03d", static_cast< int >( br ) );
+    request->send( 200, "text/plain", buffer );
+    return;
+  }
+
+  /**
    * get measure interval from server
    */
   void APIWebServer::apiGetRestInterval( AsyncWebServerRequest *request )
@@ -356,7 +395,7 @@ namespace measure_h2o
     return;
   }
 
-  void APIWebServer::apiRestFilesystemStatus( AsyncWebServerRequest *request )
+  void APIWebServer::apiGetRestFilesystemStatus( AsyncWebServerRequest *request )
   {
     // elog.log( DEBUG, "%s: request filesystem status...", APIWebServer::tag );
     // cJSON *root = cJSON_CreateObject();

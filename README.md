@@ -13,6 +13,7 @@ TODO:
   - HTTP-GET /api/v1/set-timezone?timezone-offset=3600 : set timezone offset from GMT (workarround for timezone bug)
   - HTTP-GET /api/v1/set-loglevel?level=7 : set controller loglevel, only app
   - HTTP-GET /api/v1/set-interval?interval=10 : set measure interval
+  - HTTP-GET /api/v1/set-led?brightness=128 : set les stripe ground brightness
   
 ## liglevels (numeric)
     EMERGENCY = 0,
