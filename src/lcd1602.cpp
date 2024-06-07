@@ -18,6 +18,7 @@ namespace measure_h2o
   {
     elog.log( DEBUG, "%s: MLCD init...", MLCD::tag );
     Wire.setPins( _sda, _scl );
+    vSemaphoreCreateBinary( displaySem );
   }
 
   void MLCD::init()
@@ -57,53 +58,77 @@ namespace measure_h2o
 
   void MLCD::printLine( String &_line )
   {
-    clear();
-    secondLine = firstLine;
-    firstLine = _line.substring( 0, 16 );
-    this->setCursor( 0, 1 );
-    this->send_string( firstLine.c_str() );
-    this->setCursor( 0, 0 );
-    this->send_string( secondLine.c_str() );
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
+    {
+      clear();
+      secondLine = firstLine;
+      firstLine = _line.substring( 0, 16 );
+      this->setCursor( 0, 1 );
+      this->send_string( firstLine.c_str() );
+      this->setCursor( 0, 0 );
+      this->send_string( secondLine.c_str() );
+      xSemaphoreGive( displaySem );
+    }
   }
 
   void MLCD::printPresure( float _pressureBar )
   {
-    if ( !printedPresureTitle )
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
     {
-      this->setCursor( 0, 1 );
-      this->send_string( "Druck:     bar  " );
-      printedPresureTitle = true;
-      printedAlert = false;
-      printedMessage = false;
+      if ( !printedPresureTitle )
+      {
+        this->setCursor( 0, 1 );
+        this->send_string( "Druck:     bar  " );
+        printedPresureTitle = true;
+        printedAlert = false;
+        printedMessage = false;
+      }
+      if ( lastPressure != _pressureBar )
+      {
+        char buffer[ 16 ];
+        snprintf( buffer, 5, "%1.2f", _pressureBar );
+        this->setCursor( 6, 1 );
+        this->send_string( buffer );
+        lastPressure = _pressureBar;
+      }
     }
-    if ( lastPressure != _pressureBar )
-    {
-      char buffer[ 16 ];
-      snprintf( buffer, 5, "%1.2f", _pressureBar );
-      this->setCursor( 6, 1 );
-      this->send_string( buffer );
-      lastPressure = _pressureBar;
-    }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::printTension( float _tension )
   {
-    if ( !printedTension )
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
+    {
+      if ( !printedTension )
+      {
+        this->setCursor( 0, 0 );
+        this->send_string( "Spng:      V    " );
+        printedTension = true;
+        printedAlert = false;
+        printedMessage = false;
+      }
+      if ( lastTension != _tension )
+      {
+        char buffer[ 16 ];
+        this->setCursor( 6, 0 );
+        snprintf( buffer, 8, "%1.2f V", _tension );
+        this->send_string( buffer );
+        lastTension = _tension;
+      }
+    }
+    xSemaphoreGive( displaySem );
+  }
+
+  void MLCD::printTime( const String &_timeStr )
+  {
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
     {
       this->setCursor( 0, 0 );
-      this->send_string( "Spng:      V    " );
-      printedTension = true;
-      printedAlert = false;
-      printedMessage = false;
-    }
-    if ( lastTension != _tension )
-    {
-      char buffer[ 16 ];
+      this->send_string( "Zeit:           " );
       this->setCursor( 6, 0 );
-      snprintf( buffer, 8, "%1.2f V", _tension );
-      this->send_string( buffer );
-      lastTension = _tension;
+      this->send_string( _timeStr.substring( 0, 10 ).c_str() );
     }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::printHartbeat()
@@ -112,35 +137,43 @@ namespace measure_h2o
     //
     if ( showMeasureMark )
       return;
-    this->setCursor( 15, 0 );
-    ++beat;
-    switch ( beat )
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
     {
-      case 1:
-        this->write_char( '|' );
-        break;
+      this->setCursor( 15, 0 );
+      ++beat;
+      switch ( beat )
+      {
+        case 1:
+          this->write_char( '|' );
+          break;
 
-      case 2:
-        this->write_char( '/' );
-        break;
+        case 2:
+          this->write_char( '/' );
+          break;
 
-      case 3:
-        this->write_char( '-' );
-        break;
+        case 3:
+          this->write_char( '-' );
+          break;
 
-      case 4:
-      default:
-        this->write_char( 0 );
-        beat = 0;
-        break;
+        case 4:
+        default:
+          this->write_char( 0 );
+          beat = 0;
+          break;
+      }
     }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::printMeasureMark()
   {
-    showMeasureMark = true;
-    this->setCursor( 15, 0 );
-    this->write_char( 1 );
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
+    {
+      showMeasureMark = true;
+      this->setCursor( 15, 0 );
+      this->write_char( 1 );
+    }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::hideMeasureMark()
@@ -150,50 +183,66 @@ namespace measure_h2o
 
   void MLCD::printAlert( String &_msg )
   {
-    printedTension = false;
-    printedPresureTitle = false;
-    if ( !printedAlert )
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
     {
-      this->clear();
-      this->setCursor( 0, 0 );
-      this->send_string( " FEHLER:" );
-      printedAlert = true;
+      printedTension = false;
+      printedPresureTitle = false;
+      if ( !printedAlert )
+      {
+        this->clear();
+        this->setCursor( 0, 0 );
+        this->send_string( " FEHLER:" );
+        printedAlert = true;
+      }
+      if ( _msg )
+      {
+        this->setCursor( 0, 1 );
+        this->send_string( _msg.c_str() );
+      }
     }
-    if ( _msg )
-    {
-      this->setCursor( 0, 1 );
-      this->send_string( _msg.c_str() );
-    }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::printMessage( String &_msg )
   {
-    printedTension = false;
-    printedPresureTitle = false;
-    if ( !printedMessage )
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
     {
-      this->clear();
-      this->setCursor( 0, 0 );
-      this->send_string( " NACHRICHT:" );
-      printedMessage = true;
+      printedTension = false;
+      printedPresureTitle = false;
+      if ( !printedMessage )
+      {
+        this->clear();
+        this->setCursor( 0, 0 );
+        this->send_string( " NACHRICHT:" );
+        printedMessage = true;
+      }
+      if ( _msg )
+      {
+        this->setCursor( 0, 1 );
+        this->send_string( _msg.c_str() );
+      }
     }
-    if ( _msg )
-    {
-      this->setCursor( 0, 1 );
-      this->send_string( _msg.c_str() );
-    }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::printAntMark()
   {
-    this->setCursor( 15, 1 );
-    this->write_char( 2 );
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
+    {
+      this->setCursor( 15, 1 );
+      this->write_char( 2 );
+    }
+    xSemaphoreGive( displaySem );
   }
 
   void MLCD::hideAntMark()
   {
-    this->setCursor( 15, 1 );
-    this->write_char( 0x20 );
+    if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
+    {
+      this->setCursor( 15, 1 );
+      this->write_char( 0x20 );
+    }
+    xSemaphoreGive( displaySem );
   }
 
 }  // namespace measure_h2o

@@ -1,5 +1,8 @@
 #pragma once
 #include <memory>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/event_groups.h>
 #include <Wire.h>
 #include <Waveshare_LCD1602.h>
 
@@ -17,6 +20,7 @@ namespace measure_h2o
     float lastPressure;
     float lastTension;
     String firstLine, secondLine;
+    SemaphoreHandle_t displaySem;  //! is access to files busy
 
     public:
     MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
@@ -24,6 +28,7 @@ namespace measure_h2o
     void clear();
     void printPresure( float );
     void printTension( float );
+    void printTime( const String & );
     void printHartbeat();
     void printMeasureMark();
     void hideMeasureMark();

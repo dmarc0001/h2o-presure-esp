@@ -354,18 +354,44 @@ void updateDisplay()
 {
   using namespace measure_h2o;
   static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
+  static int hour, minute;
   //
   // set display if changed
   //
   if ( prefs::AppStati::getWasChanged() || esp_timer_get_time() > nextTimeToForceShowPresure )
   {
-    uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
-    float volt = mVolt / 1000.0f;
+    // uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
+    // float volt = mVolt / 1000.0f;
     float pressureBar = prefs::AppStati::getCurrentPressureBar();
     if ( esp_timer_get_time() <= nextTimeToForceShowPresure )
-      elog.log( INFO, "main: pressure changed, raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
+      elog.log( INFO, "main: pressure changed, pressure <%1.2f bar>", pressureBar );
+    // elog.log( INFO, "main: pressure changed, raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
     //
-    display->printTension( volt );
+    // display->printTension( volt );
+    if ( esp_timer_get_time() > nextTimeToForceShowPresure )
+    {
+      if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
+      {
+        struct tm ti;
+        if ( getLocalTime( &ti ) )
+        {
+          if ( hour != ti.tm_hour && minute != ti.tm_min )
+          {
+            // only if time changed
+            hour = ti.tm_hour;
+            minute = ti.tm_min;
+            char buffer[ 6 ];
+            snprintf( buffer, 6, "%02d:%02d", ti.tm_hour, ti.tm_min );
+            String timeStr( buffer );
+            display->printTime( timeStr );
+          }
+        }
+      }
+      else
+      {
+        display->printTime( "--:--" );
+      }
+    }
     display->printPresure( pressureBar );
     prefs::AppStati::resetWasChanged();
     nextTimeToForceShowPresure = esp_timer_get_time() + FORCE_DELAYTIME;
