@@ -24,16 +24,18 @@ namespace measure_h2o
     // wm.resetSettings();
     // WifiConfig::wm.setConfigPortalBlocking( false );
     WifiConfig::wm.setConfigPortalBlocking( true );
-    WifiConfig::wm.setConnectTimeout( 20 );
-     //
+    WifiConfig::wm.setConnectTimeout( 25 );
+    WifiConfig::wm.setConfigPortalTimeout( 180 );  // 3 minutes up to auto connect again
+
+    //
     // esp32 time config
     // BUG: timezone not work, using gmt offset
     configTime( prefs::AppStati::getTimezoneOffset(), 0, prefs::NTP_POOL_00, prefs::NTP_POOL_01 );
-     // the old way...
+    // the old way...
     // sntp_set_sync_mode( SNTP_SYNC_MODE_IMMED );
     // sntp_setoperatingmode( SNTP_OPMODE_POLL );
     // sntp_setservername( 1, "pool.ntp.org" );
-    
+
     //
     // set an callback for my reasons
     //
