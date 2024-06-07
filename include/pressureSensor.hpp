@@ -23,7 +23,7 @@ namespace measure_h2o
 
     private:
     static void start();          //! start measure thread
-    static void mTask( void * );  //! the task fir LED
+    static void mTask( void * );  //! the task for preasure
     static void doMeasure();      //! make a measure
   };
 

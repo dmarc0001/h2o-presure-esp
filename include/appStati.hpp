@@ -13,7 +13,6 @@ namespace prefs
     private:
     static const char *tag;
     static bool wasInit;                     //! was the prefs object initialized?
-    static bool httpActive;                  //! was http active?
     static Preferences lPref;                //! static preferences object
     static uint32_t calibreMinVal;           //! minimal value by calibr
     static uint32_t calibreMaxVal;           //! maximal value by calibr
@@ -24,19 +23,15 @@ namespace prefs
     static WlanState wlanState;              //! is wlan disconnected, connected etc....
 
     public:
+    static volatile bool wasMeasure;  //! system was measuring
+    static volatile bool httpActive;  //! was http active?
+
+    public:
     static void init();
     static String getHostName();  //! get my own hostname
     static bool getIsSpiffsInit()
     {
       return Filesystem::getIsOkay();
-    }
-    static bool getHttpActive()
-    {
-      return AppStati::httpActive;
-    }
-    static void setHttpActive( bool _val )
-    {
-      AppStati::httpActive = _val;
     }
     static uint32_t getCalibreMinVal();
     static uint32_t getCalibreMaxVal();

@@ -131,7 +131,7 @@ namespace measure_h2o
   void APIWebServer::onIndex( AsyncWebServerRequest *request )
   {
     String file( "/www/index.html" );
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     APIWebServer::deliverFileToHttpd( file, request );
   }
 
@@ -140,7 +140,7 @@ namespace measure_h2o
    */
   void APIWebServer::onFilesReq( AsyncWebServerRequest *request )
   {
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     String file( request->url() );
     APIWebServer::deliverFileToHttpd( file, request );
   }
@@ -150,7 +150,7 @@ namespace measure_h2o
    */
   void APIWebServer::onApiV1( AsyncWebServerRequest *request )
   {
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     String parameter = request->pathArg( 0 );
     elog.log( DEBUG, "%s: api version 1 call <%s>", APIWebServer::tag, parameter );
     if ( parameter.equals( "today" ) )
@@ -181,7 +181,7 @@ namespace measure_h2o
    */
   void APIWebServer::onApiV1Set( AsyncWebServerRequest *request )
   {
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     String verb = request->pathArg( 0 );
     String server, port;
 
@@ -460,7 +460,7 @@ namespace measure_h2o
    */
   void APIWebServer::onServerError( AsyncWebServerRequest *request, int errNo, const String &msg )
   {
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     String myUrl( request->url() );
     elog.log( ERROR, "%s: Server ERROR: %03d - %s", APIWebServer::tag, errNo, msg.c_str() );
     request->send( errNo, "text/plain", msg );
@@ -471,7 +471,7 @@ namespace measure_h2o
    */
   void APIWebServer::onNotFound( AsyncWebServerRequest *request )
   {
-    prefs::AppStati::setHttpActive( true );
+    prefs::AppStati::httpActive = true;
     String myUrl( request->url() );
     elog.log( WARNING, "%s: url not found <%s>", APIWebServer::tag, myUrl.c_str() );
     request->send( 404, "text/plain", "URL not found: <" + myUrl + ">" );

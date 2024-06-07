@@ -77,11 +77,13 @@ namespace measure_h2o
     // 8 times measure, ackumulate, then div 8
     //
     uint32_t readValuesSum{ 0UL };
+    // set flag it was mesured
+    prefs::AppStati::wasMeasure = true;
     for ( int idx = 0; idx < 8; idx++ )
     {
       // read value
       readValuesSum += analogReadMilliVolts( prefs::PRESSURE_GPIO );
-      delay( 10 );
+      delay( 8 );
     }
     // average minus bias
     uint32_t cMiliVolts = ( readValuesSum >> 3 );

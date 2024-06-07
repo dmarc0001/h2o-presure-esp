@@ -12,6 +12,7 @@
 #include "appStati.hpp"
 #include "appPrefs.hpp"
 #include "fileService.hpp"
+#include "ledStripe.hpp"
 #include "statics.hpp"
 #include "wifiConfig.hpp"
 #include "webServer.hpp"
@@ -48,12 +49,6 @@ void setup()
   // elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
   // setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
   // tzset();
-  //
-  // led stripe settings
-  //
-  elog.log( INFO, "main: init LEDSTRIPE..." );
-  mLED = std::make_shared< MLED >( prefs::LED_NUM, prefs::LED_INTERNAL, NEO_GRB + NEO_KHZ800 );
-  mLED->setBrightness( 128 );  // Set BRIGHTNESS  (max = 255)
   // start analog reader
   elog.log( INFO, "main: init preasure measure..." );
   PrSensor::init();
@@ -65,6 +60,11 @@ void setup()
   // watch for calibrating request
   //
   pinMode( static_cast< uint8_t >( prefs::CALIBR_REQ_PIN ), INPUT_PULLUP );
+  //
+  // led stripe settings
+  //
+  elog.log( INFO, "main: init LEDSTRIPE..." );
+  measure_h2o::MLED::init( prefs::LED_NUM, prefs::LED_PIN, NEO_GRB + NEO_KHZ800 );
   //
   // WLAN/Networking init
   //
@@ -131,7 +131,6 @@ void loop()
     //
     nextTimeToDisplayValues = nowTime + DELAYTIME;
     checkOnlineState();
-    auto result = showColors();
     updateDisplay();
   }
   //
@@ -285,28 +284,6 @@ int controlCalibr()
       }
     }
   }
-  return 0;
-}
-
-/**
- * show pressure values
- */
-int showColors()
-{
-  using namespace measure_h2o;
-
-  //
-  // DEMONSTRATION ONLY, IMPLEMENT LATER
-  //
-  uint8_t red = static_cast< uint8_t >( 0xff & random( 255 ) );
-  uint8_t green = static_cast< uint8_t >( 0xff & random( 255 ) );
-  uint8_t blue = static_cast< uint8_t >( 0xff & random( 255 ) );
-  mLED->setBrightness( static_cast< uint8_t >( 0xff & random( 0x20, 0xff ) ) );
-  mLED->setPixelColor( 0, mLED->Color( red, green, blue ) );
-  mLED->show();
-  delay( 150 );
-  mLED->setPixelColor( 0, 0x0 );
-  mLED->show();
   return 0;
 }
 

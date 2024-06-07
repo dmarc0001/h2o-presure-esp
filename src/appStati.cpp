@@ -25,7 +25,6 @@ namespace prefs
   //
   const char *AppStati::tag{ "AppStati" };
   bool AppStati::wasInit{ false };
-  bool AppStati::httpActive{ false };
   Preferences AppStati::lPref;
   uint32_t AppStati::calibreMinVal{ std::numeric_limits< uint32_t >::max() };
   uint32_t AppStati::calibreMaxVal{ std::numeric_limits< uint32_t >::max() };
@@ -33,6 +32,8 @@ namespace prefs
   uint32_t AppStati::currentMiliVolts{ 0 };
   float AppStati::currentPressureBar{ 0.0F };
   volatile bool AppStati::presureWasChanged{ true };
+  volatile bool AppStati::httpActive{ false };
+  volatile bool AppStati::wasMeasure{ false };
   WlanState AppStati::wlanState{ WlanState::DISCONNECTED };
 
   void AppStati::init()
@@ -213,7 +214,7 @@ namespace prefs
 
   bool AppStati::setMeasureInterval_s( uint32_t _val )
   {
-    return(AppStati::lPref.putUInt( MEASURE_TIMEDIFF, _val ) > 0 );
+    return ( AppStati::lPref.putUInt( MEASURE_TIMEDIFF, _val ) > 0 );
   }
 
 }  // namespace prefs

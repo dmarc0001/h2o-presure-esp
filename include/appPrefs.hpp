@@ -21,7 +21,14 @@ namespace prefs
   constexpr const char *DEFAULT_HOSTNAME = "esp_h2o";                                            //! default hostname
   constexpr const char *NTP_POOL_01{ "pool.ntp.org" };                                           //! ntp pool
   constexpr const char *NTP_POOL_00{ "de.pool.ntp.org" };                                        //! ntp pool
-  constexpr int LED_NUM = 1;                                                                     //! only one LED internal
+  constexpr int LED_NUM = 4;                                                                     //! led count
+  constexpr gpio_num_t LED_PIN = GPIO_NUM_7;                                                     //! LED Stripe PIN
+  constexpr int LED_LAN = 0;                                                                     //! LED for WLAN STATE
+  constexpr int LED_TIMESYNC = 1;                                                                //! LED for Time SYNC
+  constexpr int LED_MEASURESTATE = 2;                                                            //! LED for measure state
+  constexpr int LED_HTTP_ACTIVE = 3;                                                             //! LED for http access state
+  constexpr uint8_t LED_GLOBAL_BRIGHTNESS = 24;                                                  //! global brightness led stripe
+  constexpr uint64_t LED_CHECK_DIFF_TIME_MS = 200ULL;                                            //! time between task for led sleeps
   constexpr gpio_num_t PRESSURE_GPIO = GPIO_NUM_0;                                               //! analog read pressure
   constexpr uint8_t PRESSURE_RES = 12;                                                           //! resulution für current
   constexpr double PRESSURE_CALIBR_VALUE = 2.08333;                                              //! factor raw->millivolt
@@ -44,4 +51,21 @@ namespace prefs
   constexpr const char *DAYLY_FILE_NAME{ "%04d-%02d-%02d-pressure.csv" };                        //! data dayly for pressure
   constexpr const char *DAYLY_FILE_PATTERN{ "^/data/\\d\\d\\d\\d-\\d\\d-\\d\\d-presure.csv$" };  //! filename pattern
   constexpr time_t MAX_DATA_FILE_AGE_SEC = 5L * 24L * 60L * 60L;                                 //! max age for files
+
+  //
+  // LED COLORS
+  // ((uint32_t)r << 16) | ((uint32_t)g << 8) | b
+  //
+  constexpr uint32_t LED_COLOR_BLACK = 0x00;
+  constexpr uint32_t LED_COLOR_WLAN_UNKNOWN = 0x00c7825d;
+  constexpr uint32_t LED_COLOR_WLAN_DISCONNECTED = 0x008a1d6f;
+  constexpr uint32_t LED_COLOR_WLAN_SEARCHING = 0x00ffff00;
+  constexpr uint32_t LED_COLOR_WLAN_CONNECTED = 0x0000ff00;
+  constexpr uint32_t LED_COLOR_WLAN_TIME_SYNCED = 0x0000ff00;
+  constexpr uint32_t LED_COLOR_WLAN_TIME_NOT_SYNCED = 0x00bd660f;
+  constexpr uint32_t LED_COLOR_WLAN_ERROR = 0x00FF0000;
+  constexpr uint32_t LED_COLOR_MEASURE_ACTICE = 0x00f00cd1;
+  constexpr uint32_t LED_COLOR_MEASURE_INACTICE = 0x00bd660f;
+  constexpr uint32_t LED_COLOR_HTTP_ACCESS = 0x00FFFFA0;
+
 }  // namespace prefs
