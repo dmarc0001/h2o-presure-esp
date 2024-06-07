@@ -25,7 +25,7 @@ namespace measure_h2o
     // WifiConfig::wm.setConfigPortalBlocking( false );
     WifiConfig::wm.setConfigPortalBlocking( true );
     WifiConfig::wm.setConnectTimeout( 25 );
-    WifiConfig::wm.setConfigPortalTimeout( 180 );  // 3 minutes up to auto connect again
+    WifiConfig::wm.setConfigPortalTimeout( 120 );  // 2 minutes up to auto connect again
 
     //
     // esp32 time config
@@ -40,22 +40,29 @@ namespace measure_h2o
     // set an callback for my reasons
     //
     sntp_set_time_sync_notification_cb( WifiConfig::timeSyncNotificationCallback );
-    if ( WifiConfig::wm.autoConnect( "EnvServerConfigAP" ) )
+    prefs::AppStati::setWlanState( WlanState::FAILED );
+    while ( ( prefs::AppStati::getWlanState() != WlanState::CONNECTED ) &&
+            ( prefs::AppStati::getWlanState() != WlanState::TIMESYNCED ) )
     {
-      elog.log( INFO, "%s: wifi connected...", WifiConfig::tag );
-      prefs::AppStati::setWlanState( WlanState::CONNECTED );
-      elog.log( DEBUG, "%s: try to sync time...", WifiConfig::tag );
-      sntp_init();
-      WifiConfig::is_sntp_init = true;
-      WifiConfig::wm.stopWebPortal();
-    }
-    else
-    {
-      elog.log( WARNING, "%s: wifi not connected, access point running...", WifiConfig::tag );
-      prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
-      // WifiConfig::wm.setAPCallback( WifiConfig::configModeCallback );
-      // set dark mode
-      WifiConfig::wm.setClass( "invert" );
+      if ( WifiConfig::wm.autoConnect( prefs::WIFI_CONFIG_AP, prefs::WIFI_CONFIG_PASS ) )
+      {
+        elog.log( INFO, "%s: wifi connected...", WifiConfig::tag );
+        prefs::AppStati::setWlanState( WlanState::CONNECTED );
+        elog.log( DEBUG, "%s: try to sync time...", WifiConfig::tag );
+        sntp_init();
+        WifiConfig::is_sntp_init = true;
+        WifiConfig::wm.stopWebPortal();
+      }
+      else
+      {
+        elog.log( WARNING, "%s: wifi not connected, access point running...", WifiConfig::tag );
+        prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
+        String msg = "init Portal...";
+        display->printLine( msg );
+        msg = "IP: 192.168.4.1";
+        display->printLine( msg );
+        WifiConfig::wm.setConfigPortalTimeout( 180 );  // 3 minutes up to auto connect again
+      }
     }
     elog.log( INFO, "%s: initialize wifi...OK", WifiConfig::tag );
   }

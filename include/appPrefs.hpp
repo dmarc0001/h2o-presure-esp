@@ -17,6 +17,8 @@ namespace prefs
   constexpr gpio_num_t LED_INTERNAL = GPIO_NUM_21;
 #endif
 #endif
+  constexpr const char *WIFI_CONFIG_AP = "esp32MeasureWiFi";                                     //! accesspoint for WiFi if not config
+  constexpr const char *WIFI_CONFIG_PASS = "password";                                           //! AP password
   constexpr const char *APPNAME = "PRESSURE";                                                    //! application name
   constexpr const char *DEFAULT_HOSTNAME = "esp_h2o";                                            //! default hostname
   constexpr const char *NTP_POOL_01{ "pool.ntp.org" };                                           //! ntp pool
@@ -27,7 +29,7 @@ namespace prefs
   constexpr int LED_TIMESYNC = 1;                                                                //! LED for Time SYNC
   constexpr int LED_MEASURESTATE = 2;                                                            //! LED for measure state
   constexpr int LED_HTTP_ACTIVE = 3;                                                             //! LED for http access state
-  constexpr uint8_t LED_GLOBAL_BRIGHTNESS = 128;                                                  //! global brightness led stripe
+  constexpr uint8_t LED_GLOBAL_BRIGHTNESS = 128;                                                 //! global brightness led stripe
   constexpr uint64_t LED_CHECK_DIFF_TIME_MS = 200ULL;                                            //! time between task for led sleeps
   constexpr gpio_num_t PRESSURE_GPIO = GPIO_NUM_0;                                               //! analog read pressure
   constexpr uint8_t PRESSURE_RES = 12;                                                           //! resulution für current
