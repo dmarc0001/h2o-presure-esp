@@ -19,6 +19,7 @@ namespace prefs
   constexpr const char *CAL_MAXVAL{ "cal_max" };
   constexpr const char *CAL_FACTOR{ "cal_factor" };
   constexpr const char *MEASURE_TIMEDIFF{ "measure_diff" };
+  constexpr const char *SIGNAL_LED_BRIGHTNESS{ "led_brightness" };
 
   //
   // init static variables
@@ -55,10 +56,27 @@ namespace prefs
       AppStati::lPref.putUInt( CAL_MAXVAL, PRESSURE_MAX_MILIVOLT );
       AppStati::lPref.putDouble( CAL_FACTOR, PRESSURE_CALIBR_VALUE );
       AppStati::lPref.putUInt( MEASURE_TIMEDIFF, MEASURE_DIFF_TIME_S );
+      AppStati::lPref.putUShort( SIGNAL_LED_BRIGHTNESS, LED_GLOBAL_BRIGHTNESS );
       Serial.println( "first-time-init preferences...DONE" );
       AppStati::setIfPrefsInit( true );
     }
     AppStati::wasInit = true;
+  }
+
+  /**
+   * get the ground brightness from LED
+   */
+  uint8_t AppStati::getLedBrightness()
+  {
+    return static_cast< uint8_t >( AppStati::lPref.getUShort( SIGNAL_LED_BRIGHTNESS, LED_GLOBAL_BRIGHTNESS ) );
+  }
+
+  /**
+   * set the ground brightness from LED
+   */
+  bool AppStati::setLedBrightness( uint8_t _val )
+  {
+    return ( AppStati::lPref.putUShort( SIGNAL_LED_BRIGHTNESS, static_cast< uint16_t >( _val ) ) > 0 );
   }
 
   /**

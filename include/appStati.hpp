@@ -74,6 +74,9 @@ namespace prefs
     static bool setLogLevel( uint8_t );            //! set Logging
     static uint32_t getMeasureInterval_s();        //! get interval bwtween two measures
     static bool setMeasureInterval_s( uint32_t );  //! set Interval bewtween two measures
+    static uint8_t getLedBrightness();             //! get led ground brightness
+    static bool setLedBrightness( uint8_t );       //! set led ground brightness
+
     private:
     static bool getIfPrefsInit();        //! internal, is preferences initialized?
     static bool setIfPrefsInit( bool );  //! internal, set preferences initialized?

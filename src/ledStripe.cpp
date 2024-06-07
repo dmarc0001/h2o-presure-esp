@@ -20,7 +20,7 @@ namespace measure_h2o
     ledStripe.updateLength( _countLed );
     ledStripe.begin();  // INITIALIZE NeoPixel strip object (REQUIRED)
     ledStripe.show();   // Turn OFF all pixels ASAP
-    ledStripe.setBrightness( prefs::LED_GLOBAL_BRIGHTNESS );
+    ledStripe.setBrightness( prefs::AppStati::getLedBrightness() );
     MLED::start();
     elog.log( DEBUG, "%s: init MLED...OK", MLED::tag );
   }
@@ -43,7 +43,7 @@ namespace measure_h2o
         delay( 60 );
       }
     }
-    ledStripe.setBrightness( prefs::LED_GLOBAL_BRIGHTNESS );
+    ledStripe.setBrightness( prefs::AppStati::getLedBrightness() );
     ledStripe.setPixelColor( prefs::LED_MEASURESTATE, prefs::LED_COLOR_MEASURE_INACTICE );
     ledStripe.setPixelColor( prefs::LED_TIMESYNC, prefs::LED_COLOR_WLAN_TIME_NOT_SYNCED );
     ledStripe.setPixelColor( prefs::LED_LAN, prefs::LED_COLOR_WLAN_DISCONNECTED );

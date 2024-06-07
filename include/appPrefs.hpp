@@ -27,7 +27,7 @@ namespace prefs
   constexpr int LED_TIMESYNC = 1;                                                                //! LED for Time SYNC
   constexpr int LED_MEASURESTATE = 2;                                                            //! LED for measure state
   constexpr int LED_HTTP_ACTIVE = 3;                                                             //! LED for http access state
-  constexpr uint8_t LED_GLOBAL_BRIGHTNESS = 24;                                                  //! global brightness led stripe
+  constexpr uint8_t LED_GLOBAL_BRIGHTNESS = 128;                                                  //! global brightness led stripe
   constexpr uint64_t LED_CHECK_DIFF_TIME_MS = 200ULL;                                            //! time between task for led sleeps
   constexpr gpio_num_t PRESSURE_GPIO = GPIO_NUM_0;                                               //! analog read pressure
   constexpr uint8_t PRESSURE_RES = 12;                                                           //! resulution für current
