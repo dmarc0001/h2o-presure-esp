@@ -70,6 +70,18 @@ namespace measure_h2o
     return true;
   }
 
+  uint32_t PrSensor::getCurrentValue()
+  {
+    PrSensor::pauseMeasureTask = true;
+    delay( 400U );
+    PrSensor::doMeasure();
+    PrSensor::pauseMeasureTask = false;
+    return prefs::AppStati::getCurrentMiliVolts();
+  }
+
+  /**
+   * do measure
+   */
   void PrSensor::doMeasure()
   {
     //
@@ -133,7 +145,7 @@ namespace measure_h2o
         dataset.miliVolts = prefs::AppStati::getCurrentMiliVolts();
         dataset.pressureBar = prefs::AppStati::getCurrentPressureBar();
         FileService::dataset.push_back( dataset );
-        delay( 500U );
+        delay( 350U );
         display->hideMeasureMark();
       }
       delay( 753U );

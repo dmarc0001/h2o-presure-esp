@@ -18,8 +18,9 @@ namespace measure_h2o
     static uint64_t interval_ys;            //! interval between two measures
 
     public:
-    static void init();           //! init the startic object
-    static bool calibreSensor();  //! calibre sensor
+    static void init();                 //! init the startic object
+    static bool calibreSensor();        //! calibre sensor
+    static uint32_t getCurrentValue();  //! check bevor calibrte quick
 
     private:
     static void start();          //! start measure thread

@@ -22,7 +22,7 @@ constexpr uint64_t DELAYTIME = 750000ULL;
 constexpr uint64_t HARTBEATTIME = 400000ULL;
 constexpr uint64_t ANTTIME = 1200000ULL;
 constexpr uint64_t CALIBRTIME = 255000ULL;
-constexpr uint64_t FORCE_DELAYTIME = 10000000ULL;
+constexpr uint64_t FORCE_DELAYTIME = 4000000ULL;
 
 void setup()
 {
@@ -246,7 +246,7 @@ int controlCalibr()
       // maybe i can calibr?
       elog.log( DEBUG, "main: calibrating requested!" );
       // is ther a preasure in the sensor?
-      if ( prefs::CURRENT_BORDER_FOR_CALIBR < prefs::AppStati::getCurrentMiliVolts() )
+      if ( prefs::CURRENT_BORDER_FOR_CALIBR < PrSensor::getCurrentValue() )
       {
         display->printAlert( msg );
         delay( 2000 );
@@ -354,20 +354,22 @@ void updateDisplay()
 {
   using namespace measure_h2o;
   static uint64_t nextTimeToForceShowPresure = FORCE_DELAYTIME;
-  static int hour, minute;
+  static int hour, minute, count;
   //
   // set display if changed
   //
   if ( prefs::AppStati::getWasChanged() || esp_timer_get_time() > nextTimeToForceShowPresure )
   {
-    // uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
-    // float volt = mVolt / 1000.0f;
     float pressureBar = prefs::AppStati::getCurrentPressureBar();
-    if ( esp_timer_get_time() <= nextTimeToForceShowPresure )
+#ifdef BUILD_DEBUG
+    uint32_t mVolt = prefs::AppStati::getCurrentMiliVolts();
+    float volt = mVolt / 1000.0f;
+    if ( prefs::AppStati::getWasChanged() )
+      elog.log( INFO, "main: pressure changed, raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
+#else
+    if ( prefs::AppStati::getWasChanged() )
       elog.log( INFO, "main: pressure changed, pressure <%1.2f bar>", pressureBar );
-    // elog.log( INFO, "main: pressure changed, raw value <%1.2f V>, pressure <%1.2f bar>", volt, pressureBar );
-    //
-    // display->printTension( volt );
+#endif
     if ( esp_timer_get_time() > nextTimeToForceShowPresure )
     {
       if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
@@ -375,16 +377,18 @@ void updateDisplay()
         struct tm ti;
         if ( getLocalTime( &ti ) )
         {
-          if ( hour != ti.tm_hour && minute != ti.tm_min )
+          if ( hour != ti.tm_hour || minute != ti.tm_min || count > 4 )
           {
             // only if time changed
             hour = ti.tm_hour;
             minute = ti.tm_min;
+            count = 0;
             char buffer[ 6 ];
             snprintf( buffer, 6, "%02d:%02d", ti.tm_hour, ti.tm_min );
             String timeStr( buffer );
             display->printTime( timeStr );
           }
+          ++count;
         }
       }
       else
