@@ -49,7 +49,7 @@ namespace measure_h2o
   void FileService::sTask( void * )
   {
     static uint64_t nextTimeToCheck = prefs::FILE_TASK_DELAY_YS;
-    static uint64_t nextTimeToFSCheck = prefs::FILE_TASK_CHECK_DELAY_YS;
+    static uint64_t nextTimeToFSCheck = esp_timer_get_time() + prefs::FILE_TASK_CHECK_DELAY_YS;
 
     while ( true )
     {
@@ -166,7 +166,7 @@ namespace measure_h2o
     //
     while ( !fname.empty() )
     {
-      // elog.log( DEBUG, "%s: === found file <%s>", FileService::tag, fname.c_str() );
+      elog.log( DEBUG, "%s: === found file <%s>", FileService::tag, fname.c_str() );
       //
       // is the Filename like ma pattern
       //
@@ -177,11 +177,11 @@ namespace measure_h2o
         // store in Vector
         //
         String matchedFileName( fname.c_str() );
-        // elog.log( DEBUG, "%s: +++ found file who match <%s>", FileService::tag, fname.c_str() );
+        elog.log( DEBUG, "%s: +++ found file who match <%s>", FileService::tag, fname.c_str() );
         fileList.push_back( matchedFileName );
       }
       fname = root.getNextFileName().c_str();
-      delay( 1 );
+      delay( 10 );
     }
     root.close();
     if ( fileList.empty() )
