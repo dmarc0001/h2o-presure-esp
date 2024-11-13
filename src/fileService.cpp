@@ -15,6 +15,9 @@ namespace measure_h2o
   String FileService::todayFileName;
   int FileService::todayDay{ -1 };
 
+  /**
+   * init this object (single)
+   */
   void FileService::init()
   {
     //
@@ -30,6 +33,9 @@ namespace measure_h2o
     FileService::start();
   }
 
+  /**
+   * internal: start service task
+   */
   void FileService::start()
   {
     elog.log( INFO, "%s: Task start...", FileService::tag );
@@ -46,23 +52,40 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * service task
+   */
   void FileService::sTask( void * )
   {
     static uint64_t nextTimeToCheck = prefs::FILE_TASK_DELAY_YS;
+    static uint64_t nextSystemFsCheck = esp_timer_get_time() + prefs::FILE_SYSTEM_SIZE_CHECK_YS;
     static uint64_t nextTimeToFSCheck = esp_timer_get_time() + prefs::FILE_TASK_CHECK_DELAY_YS;
 
     while ( true )
     {
       uint64_t nowTime = esp_timer_get_time();
 
+      if ( nowTime > nextSystemFsCheck )
+      {
+        //
+        // check if filesystem free size too small
+        //
+      }
+
       if ( nowTime > nextTimeToFSCheck )
       {
+        //
+        // check if filenames have to switch
+        //
         FileService::checkFileSys();
         nextTimeToFSCheck = nowTime + prefs::FILE_TASK_CHECK_DELAY_YS;
       }
 
       if ( nowTime > nextTimeToCheck )
       {
+        //
+        // check if data have to save
+        //
         if ( !FileService::dataset.empty() )
         {
           //
@@ -76,6 +99,22 @@ namespace measure_h2o
         // }
         nextTimeToCheck = nowTime + prefs::FILE_TASK_DELAY_YS;
       }
+    }
+  }
+
+  int FileService::checkFileSysSizes()
+  {
+    elog.log( DEBUG, "%s: get file infos...", FileService::tag );
+    prefs::AppStati::setFsTotalSpace( SPIFFS.totalBytes() );
+    elog.log( DEBUG, "%s: total SPIFFS space: %07d", FileService::tag, prefs::AppStati::getFsTotalSpace() );
+    prefs::AppStati::setFsUsedSpace( SPIFFS.usedBytes() );
+    elog.log( DEBUG, "%s: used SPIFFS space: %07d", FileService::tag, prefs::AppStati::getFsUsedSpace() );
+    //
+    // TODO: esp_err_t esp_spiffs_gc(const char *partition_label, size_t size_to_gc)
+    //
+    if ( prefs::MIN_FILE_SYSTEM_FREE_SIZE < prefs::AppStati::getFsFreeSize() )
+    {
+      // elog.warn( DEBUG, "%s: free memory too low, action needed", FileService::tag );
     }
   }
 
@@ -154,6 +193,9 @@ namespace measure_h2o
 
   int FileService::checkFileSys()
   {
+    //
+    FileService::checkFileSysSizes();
+
     File root = SPIFFS.open( String( prefs::DATA_PATH ).substring( 0, strlen( prefs::DATA_PATH ) - 1 ) );
     std::regex reg( prefs::DAYLY_FILE_PATTERN );
     std::smatch match;
@@ -235,7 +277,7 @@ namespace measure_h2o
       }
       // else
       //   elog.log( DEBUG, "%s: file <%s> in range of age, do nothing.", FileService::tag, nameShort.c_str() );
-      delay( 1 );
+      delay( 10 );
     }
     return 0;
   }
@@ -255,3 +297,26 @@ namespace measure_h2o
   }
 
 }  // namespace measure_h2o
+
+// 2024-10-06 07:05:18 945 [GLO] [DEBUG] : PrSensor: pressure measure...
+// 2024-10-06 07:05:27 622 [GLO] [DEBUG] : FileService: there are <1> datasets for store...
+// 2024-10-06 07:05:27 858 [GLO] [DEBUG] : FileService: datafile </data/2024-10-06-pressure.csv> opened...
+// 2024-10-06 07:05:27 859 [GLO] [DEBUG] : FileService: datafile </data/2024-10-06-pressure.csv> <1> lines written...
+// 2024-10-06 07:09:19 276 [GLO] [DEBUG] : PrSensor: pressure measure...
+// 2024-10-06 07:09:27 742 [GLO] [DEBUG] : FileService: there are <1> datasets for store...
+// 2024-10-06 07:09:28 075 [GLO] [DEBUG] : FileService: datafile </data/2024-10-06-pressure.csv> opened...
+// 2024-10-06 07:09:28 075 [GLO] [DEBUG] : FileService: datafile </data/2024-10-06-pressure.csv> <1> lines written...
+// 2024-10-06 07:10:17 365 [GLO] [INFO ] : WifiConfig: device disconnected from accesspoint...
+// 2024-10-06 07:10:17 831 [GLO] [WARN ] : main: ip connectivity lost, stop webserver.
+// 2024-10-06 07:10:18 376 [GLO] [INFO ] : WifiConfig: device disconnected from accesspoint...
+// 2024-10-06 07:56:42 000 [GLO] [DEBUG] : main: logger time correction...
+// 2024-10-06 07:56:42 000 [GLO] [DEBUG] : main: gotten system time!
+// 2024-10-06 07:56:42 000 [GLO] [DEBUG] : main: logger time correction...OK
+// 2024-10-06 07:56:44 091 [GLO] [DEBUG] : FileService: get file infos...
+// 2024-10-06 07:56:44 091 [GLO] [DEBUG] : FileService: total SPIFFS space: 1216346
+// 2024-10-06 07:56:44 091 [GLO] [DEBUG] : FileService: used SPIFFS space: 0037399
+// 2024-10-06 07:56:46 000 [GLO] [INFO ] : FileService: filesystem check, search older files...
+// 2024-10-06 07:56:46 000 [GLO] [DEBUG] : FileService: === found file </data/2024-10-03-pressure.csv>
+// 2024-10-06 07:56:46 017 [GLO] [DEBUG] : FileService: === found file </data/2024-10-04-pressure.csv>
+// 2024-10-06 07:56:46 035 [GLO] [DEBUG] : FileService: === found file </data/2024-10-05-pressure.csv>
+// 2024-10-06 07:56:46 048 [GLO] [DEBUG] : FileService: === found file </data/2024-10-06-pressure.csv>

@@ -21,6 +21,8 @@ namespace prefs
     static float currentPressureBar;         //! current measured value
     static volatile bool presureWasChanged;  //! was presure changed?
     static WlanState wlanState;              //! is wlan disconnected, connected etc....
+    static size_t fsTotalSpace;              //! total space in FS
+    static size_t fsUsedSpace;               //! free Space in FS
 
     public:
     static volatile bool wasMeasure;  //! system was measuring
@@ -65,6 +67,26 @@ namespace prefs
     static WlanState getWlanState()
     {
       return AppStati::wlanState;
+    }
+    static void setFsTotalSpace( size_t _size )
+    {
+      AppStati::fsTotalSpace = _size;
+    }
+    static size_t getFsTotalSpace()
+    {
+      return AppStati::fsTotalSpace;
+    }
+    static void setFsUsedSpace( size_t _size )
+    {
+      AppStati::fsUsedSpace = _size;
+    }
+    static size_t getFsUsedSpace()
+    {
+      return AppStati::fsUsedSpace;
+    }
+    static size_t getFsFreeSize()
+    {
+      return ( AppStati::fsTotalSpace - AppStati::fsUsedSpace );
     }
     static String getTimeZone();                   //! get my timezone
     static bool setTimeZone( const String & );     //! set my timezone
