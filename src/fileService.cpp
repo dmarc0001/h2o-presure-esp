@@ -1,3 +1,4 @@
+#include <esp_spiffs.h>
 #include <regex>
 #include <cstdlib>
 #include <TimeLib.h>
@@ -70,6 +71,30 @@ namespace measure_h2o
         //
         // check if filesystem free size too small
         //
+        if ( FileService::checkFileSysSizes() != 0 )
+        {
+          //
+          // free flash memory....
+          //
+          // first: delete other than current
+          // TODO: WARNING
+          FileService::deleteOtherThanCurrent();
+          //
+          // check again
+          //
+          if ( FileService::checkFileSysSizes() != 0 )
+          {
+            // ALERT!
+            // remove current file
+            // TODO: ERROR MESSAGE
+            elog.log( ERROR, "%s: delete current file(s) while no space left for measures...", FileService::tag );
+            FileService::deleteTodayFile();
+          }
+        }
+        //
+        // next test
+        //
+        nextSystemFsCheck = nowTime + prefs::FILE_SYSTEM_SIZE_CHECK_YS;
       }
 
       if ( nowTime > nextTimeToFSCheck )
@@ -102,20 +127,102 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * delete files there not the current file
+   */
+  int FileService::deleteOtherThanCurrent()
+  {
+    //
+    // find files in path prefs::DATA_PATH
+    //
+    File root = SPIFFS.open( String( prefs::DATA_PATH ).substring( 0, strlen( prefs::DATA_PATH ) - 1 ) );
+    std::regex reg( prefs::DAYLY_FILE_PATTERN );
+    std::smatch match;
+    std::string fname( root.getNextFileName().c_str() );
+    std::vector< String > fileList;
+
+    elog.log( INFO, "%s: delete other than current file(s)...", FileService::tag );
+    //
+    // find my files in filenames
+    //
+    while ( !fname.empty() )
+    {
+      elog.log( DEBUG, "%s: === found file <%s>", FileService::tag, fname.c_str() );
+      //
+      // is the Filename like my pattern
+      //
+      if ( std::regex_search( fname, match, reg ) )
+      {
+        //
+        // filename matches
+        // store in Vector
+        //
+        String matchedFileName( fname.c_str() );
+        elog.log( DEBUG, "%s: +++ found file who match <%s> as delete candidate...", FileService::tag, fname.c_str() );
+        fileList.push_back( matchedFileName );
+      }
+      fname = root.getNextFileName().c_str();
+      delay( 10 );
+    }
+    root.close();
+    if ( fileList.empty() )
+      return 0;
+    //
+    // okay check files against current
+    //
+    int prefix = strlen( prefs::DATA_PATH );
+    //
+    // all filenames
+    //
+    for ( String fileName : fileList )
+    {
+      //
+      // make from filename a dateTime
+      //
+      String nameShort = fileName.substring( prefix, prefix + 10 );
+      String currentShort = FileService::todayFileName.substring( prefix, prefix + 10 );
+      if ( nameShort.compareTo( currentShort ) != 0 )
+      {
+        elog.log( INFO, "%s: file <%s> is too old, delete it!", FileService::tag, nameShort.c_str() );
+        SPIFFS.remove( fileName );
+      }
+      delay( 10 );
+    }
+    return 0;
+  }
+
+  /**
+   * check filesystem sizes and free space
+   */
   int FileService::checkFileSysSizes()
   {
-    elog.log( DEBUG, "%s: get file infos...", FileService::tag );
-    prefs::AppStati::setFsTotalSpace( SPIFFS.totalBytes() );
-    elog.log( DEBUG, "%s: total SPIFFS space: %07d", FileService::tag, prefs::AppStati::getFsTotalSpace() );
-    prefs::AppStati::setFsUsedSpace( SPIFFS.usedBytes() );
-    elog.log( DEBUG, "%s: used SPIFFS space: %07d", FileService::tag, prefs::AppStati::getFsUsedSpace() );
-    //
-    // TODO: esp_err_t esp_spiffs_gc(const char *partition_label, size_t size_to_gc)
-    //
-    if ( prefs::MIN_FILE_SYSTEM_FREE_SIZE < prefs::AppStati::getFsFreeSize() )
+    size_t flash_total;
+    size_t flash_used;
+    size_t flash_free;
+
+    esp_err_t errorcode = esp_spiffs_info( prefs::WEB_PARTITION_LABEL, &flash_total, &flash_used );
+    if ( errorcode == ESP_OK )
     {
-      // elog.warn( DEBUG, "%s: free memory too low, action needed", FileService::tag );
+      prefs::AppStati::setFsTotalSpace( flash_total );
+      prefs::AppStati::setFsUsedSpace( flash_used );
+      flash_free = flash_total - flash_used;
+      elog.log( DEBUG, "%s: SPIFFS total %07d, used %07d, free %07d, min-free: %07d", FileService::tag, flash_total, flash_used,
+                flash_free, prefs::MIN_FILE_SYSTEM_FREE_SIZE );
+      //
+      // TODO: esp_err_t esp_spiffs_gc(const char *partition_label, size_t size_to_gc)
+      //
+      if ( prefs::MIN_FILE_SYSTEM_FREE_SIZE > flash_free )
+      {
+        elog.log( WARNING, "%s: free memory too low, action needed", FileService::tag );
+        return -1;
+      }
+      return 0;
     }
+    else
+    {
+      elog.log( ERROR, "%s: can't check SPIFFS memory!", FileService::tag );
+    }
+    return -1;
   }
 
   /**
@@ -196,6 +303,9 @@ namespace measure_h2o
     //
     FileService::checkFileSysSizes();
 
+    //
+    // find files in path prefs::DATA_PATH
+    //
     File root = SPIFFS.open( String( prefs::DATA_PATH ).substring( 0, strlen( prefs::DATA_PATH ) - 1 ) );
     std::regex reg( prefs::DAYLY_FILE_PATTERN );
     std::smatch match;
@@ -210,7 +320,7 @@ namespace measure_h2o
     {
       elog.log( DEBUG, "%s: === found file <%s>", FileService::tag, fname.c_str() );
       //
-      // is the Filename like ma pattern
+      // is the Filename like my pattern
       //
       if ( std::regex_search( fname, match, reg ) )
       {

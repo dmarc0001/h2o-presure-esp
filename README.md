@@ -9,6 +9,7 @@ TODO:
   - HTTP-GET /api/v1/today : measure data for round about 24 hours ago
   - HTTP-GET /api/v1/data?from=2024-06-06 : get data from 2024-06-06, if availible
   - HTTP-GET /api/v1/interval : measure interval (delete today data file)
+  - HTTP-GET /api/v1/flash : amount of flash memory
   - HTTP-GET /api/v1/set-timezone?timezone=GMT : set timezone (not working timezone bug)
   - HTTP-GET /api/v1/set-timezone?timezone-offset=3600 : set timezone offset from GMT (workarround for timezone bug)
   - HTTP-GET /api/v1/set-loglevel?level=7 : set controller loglevel, only app

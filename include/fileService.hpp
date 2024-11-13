@@ -32,6 +32,7 @@ namespace measure_h2o
     static void sTask( void * );
     static int saveDatasets();
     static int checkFileSys();
+    static int deleteOtherThanCurrent();
     static int checkFileSysSizes();
   };
 }  // namespace measure_h2o

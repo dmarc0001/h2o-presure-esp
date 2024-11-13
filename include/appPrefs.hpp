@@ -50,7 +50,7 @@ namespace prefs
   constexpr const char *WEB_PARTITION_LABEL{ "mydata" };                            //! label of the spiffs or null
   constexpr uint64_t FILE_TASK_DELAY_YS = 10ULL * 1000000ULL;                       //! delay time for saving task
   constexpr uint64_t FILE_TASK_CHECK_DELAY_YS = 7ULL * 60ULL * 60ULL * 1000000ULL;  //! delay time for check filesystem
-  constexpr uint64_t FILE_SYSTEM_SIZE_CHECK_YS = 60ULL * 60ULL * 1000000ULL;        //! delay time for check filesystem ( one hour )
+  constexpr uint64_t FILE_SYSTEM_SIZE_CHECK_YS = 59ULL * 60ULL * 1000000ULL;        //! delay time for check filesystem ( one hour)
   constexpr size_t MIN_FILE_SYSTEM_FREE_SIZE = 300000;                              //! minimal free size on filesystem
   constexpr const char *DAYLY_FILE_NAME{ "%04d-%02d-%02d-pressure.csv" };           //! data dayly for pressure
   constexpr const char *DAYLY_FILE_PATTERN{ "^/data/\\d\\d\\d\\d-\\d\\d-\\d\\d-presure.csv$" };  //! filename pattern

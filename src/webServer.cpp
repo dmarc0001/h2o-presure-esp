@@ -1,5 +1,6 @@
 #include <memory>
 #include <esp_chip_info.h>
+#include <esp_spiffs.h>
 #include "webServer.hpp"
 #include "statics.hpp"
 #include "appPrefs.hpp"
@@ -173,6 +174,10 @@ namespace measure_h2o
     {
       APIWebServer::apiGetRestLedBrightness( request );
     }
+    else if ( parameter.equals( "flash" ) )
+    {
+      APIWebServer::apiGetRestFlashAmount( request );
+    }
     else
     {
       String msg = "ERROR api call v1 for <" + parameter + ">";
@@ -267,7 +272,7 @@ namespace measure_h2o
     else if ( verb.equals( "interval" ) )
     {
       String interval = request->getParam( "interval" )->value();
-      elog.log( DEBUG, "%s: set-loglevel, param: %s", APIWebServer::tag, interval.c_str() );
+      elog.log( DEBUG, "%s: set-interval, param: %s", APIWebServer::tag, interval.c_str() );
       uint32_t numLevel = static_cast< uint32_t >( interval.toInt() );
       if ( prefs::AppStati::setMeasureInterval_s( numLevel ) )
       {
@@ -393,6 +398,31 @@ namespace measure_h2o
     snprintf( buffer, 15, "INTERVAL: %03d", static_cast< int >( interval ) );
     request->send( 200, "text/plain", buffer );
     return;
+  }
+
+  /**
+   * get current flash amounts
+   */
+  void APIWebServer::apiGetRestFlashAmount( AsyncWebServerRequest *request )
+  {
+    elog.log( DEBUG, "%s: get file infos...", APIWebServer::tag );
+    size_t flash_total;
+    size_t flash_used;
+    size_t flash_free;
+
+    esp_err_t errorcode = esp_spiffs_info( prefs::WEB_PARTITION_LABEL, &flash_total, &flash_used );
+    if ( errorcode == ESP_OK )
+    {
+      flash_free = flash_total - flash_used;
+      elog.log( DEBUG, "%s: SPIFFS total %07d, used %07d, free %07d", APIWebServer::tag, flash_total, flash_used, flash_free );
+      char buffer[ 128 ];
+      snprintf( buffer, 128, "SPIFFS total %07d, used %07d, free %07d, min-free: %07d", flash_total, flash_used, flash_free, prefs::MIN_FILE_SYSTEM_FREE_SIZE );
+      request->send( 200, "text/plain", buffer );
+    }
+    else
+    {
+      request->send( 300, "text/plain", "error while chcek spiffs space" );
+    }
   }
 
   void APIWebServer::apiGetRestFilesystemStatus( AsyncWebServerRequest *request )
