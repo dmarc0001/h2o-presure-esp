@@ -245,6 +245,9 @@ namespace measure_h2o
     return false;
   }
 
+  /**
+   * save dataset(s) from queue to measure file
+   */
   int FileService::saveDatasets()
   {
     int savedCount{ 0 };
@@ -298,6 +301,9 @@ namespace measure_h2o
     return savedCount;
   }
 
+  /**
+   * chcek filesystem if i have to care data
+   */
   int FileService::checkFileSys()
   {
     //
@@ -392,6 +398,9 @@ namespace measure_h2o
     return 0;
   }
 
+  /**
+   * get the filename for today
+   */
   String &FileService::getTodayFileName()
   {
     if ( FileService::todayDay != day() )

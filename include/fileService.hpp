@@ -23,16 +23,16 @@ namespace measure_h2o
     static presure_data_set_t dataset;        //! set of mesures
 
     public:
-    static void init();
-    static String &getTodayFileName();
-    static bool deleteTodayFile();
+    static void init();                 //! init the static object
+    static String &getTodayFileName();  //! get the filename for today
+    static bool deleteTodayFile();      //! delete the file from today
 
     private:
-    static void start();
-    static void sTask( void * );
-    static int saveDatasets();
-    static int checkFileSys();
-    static int deleteOtherThanCurrent();
-    static int checkFileSysSizes();
+    static void start();                  //! init the task
+    static void sTask( void * );          //! the static task in thes object
+    static int saveDatasets();            //! save datasets from queue to file
+    static int checkFileSys();            //! check if the data have to care
+    static int deleteOtherThanCurrent();  //! emergency delete all other than current files
+    static int checkFileSysSizes();       //! check if enough free memory
   };
 }  // namespace measure_h2o
