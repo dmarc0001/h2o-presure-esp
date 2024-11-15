@@ -11,6 +11,9 @@ namespace measure_h2o
 
   const uint32_t checkColors[] PROGMEM = { 0x00ff0000UL, 0x00ffff00UL, 0x0000ff00UL, 0x0000ffffUL, 0x000000ffUL, 0x00ffffffUL, 0x0UL };
 
+  /**
+   * init the static object
+   */
   void MLED::init( uint16_t _countLed, int16_t _gpio, neoPixelType _type )
   {
     elog.log( DEBUG, "%s: init MLED...", MLED::tag );
@@ -25,6 +28,9 @@ namespace measure_h2o
     elog.log( DEBUG, "%s: init MLED...OK", MLED::tag );
   }
 
+  /**
+   * start the LEd task
+   */
   void MLED::start()
   {
     elog.log( INFO, "%s: start Task...", MLED::tag );
@@ -60,6 +66,9 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * the LED Task, run forever :-)
+   */
   void MLED::lTask( void * )
   {
     static uint64_t nextTimeToCheck = prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL;
