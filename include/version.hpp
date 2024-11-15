@@ -2,6 +2,6 @@
  
 namespace prefs
 {
-  constexpr const char *VERSION{ "release-1.1.0" };
+  constexpr const char *VERSION{ "release-1.1.1" };
 }
 
