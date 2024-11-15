@@ -8,6 +8,9 @@ namespace measure_h2o
   bool Filesystem::wasInit;
   bool Filesystem::isOkay;
 
+ /**
+  * init the static object 
+  */
   void Filesystem::init()
   {
     if ( !Filesystem::wasInit )
