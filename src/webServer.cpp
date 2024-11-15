@@ -309,6 +309,13 @@ namespace measure_h2o
         }
       }
     }
+    else if ( verb.equals( "fscheck" ) )
+    {
+      elog.log( DEBUG, "%s: set-%s, init force filesystemcheck", APIWebServer::tag, verb );
+      prefs::AppStati::setForceFilesystemCheck( true );
+      request->send( 200, "text/plain", "OK api call v1 for <set-" + verb + ">" );
+      return;
+    }
     else
     {
       request->send( 300, "text/plain", "fail api call v1 for <set-" + verb + ">" );
@@ -419,7 +426,8 @@ namespace measure_h2o
       flash_free = flash_total - flash_used;
       elog.log( DEBUG, "%s: SPIFFS total %07d, used %07d, free %07d", APIWebServer::tag, flash_total, flash_used, flash_free );
       char buffer[ 128 ];
-      snprintf( buffer, 128, "SPIFFS total %07d, used %07d, free %07d, min-free: %07d", flash_total, flash_used, flash_free, prefs::MIN_FILE_SYSTEM_FREE_SIZE );
+      snprintf( buffer, 128, "SPIFFS total %07d, used %07d, free %07d, min-free: %07d", flash_total, flash_used, flash_free,
+                prefs::MIN_FILE_SYSTEM_FREE_SIZE );
       request->send( 200, "text/plain", buffer );
     }
     else

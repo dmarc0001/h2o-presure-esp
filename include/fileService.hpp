@@ -34,5 +34,6 @@ namespace measure_h2o
     static int checkFileSys();            //! check if the data have to care
     static int deleteOtherThanCurrent();  //! emergency delete all other than current files
     static int checkFileSysSizes();       //! check if enough free memory
+    static int computeFilesystemCheck();  //! do all the checks
   };
 }  // namespace measure_h2o

@@ -37,6 +37,7 @@ namespace prefs
   WlanState AppStati::wlanState{ WlanState::DISCONNECTED };
   size_t AppStati::fsTotalSpace{ 0 };
   size_t AppStati::fsUsedSpace{ 0 };
+  bool AppStati::forceFilesystemCheck{ false };
 
   /**
    * init object

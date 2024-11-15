@@ -71,26 +71,7 @@ namespace measure_h2o
         //
         // check if filesystem free size too small
         //
-        if ( FileService::checkFileSysSizes() != 0 )
-        {
-          //
-          // free flash memory....
-          //
-          // first: delete other than current
-          // TODO: WARNING
-          FileService::deleteOtherThanCurrent();
-          //
-          // check again
-          //
-          if ( FileService::checkFileSysSizes() != 0 )
-          {
-            // ALERT!
-            // remove current file
-            // TODO: ERROR MESSAGE
-            elog.log( ERROR, "%s: delete current file(s) while no space left for measures...", FileService::tag );
-            FileService::deleteTodayFile();
-          }
-        }
+        FileService::computeFilesystemCheck();
         //
         // next test
         //
@@ -109,6 +90,14 @@ namespace measure_h2o
       if ( nowTime > nextTimeToCheck )
       {
         //
+        // first, test if force filessystem check initiated
+        //
+        if ( prefs::AppStati::getForceFilesystemCheck() )
+        {
+          prefs::AppStati::setForceFilesystemCheck( false );
+          FileService::computeFilesystemCheck();
+        }
+        //
         // check if data have to save
         //
         if ( !FileService::dataset.empty() )
@@ -125,6 +114,42 @@ namespace measure_h2o
         nextTimeToCheck = nowTime + prefs::FILE_TASK_DELAY_YS;
       }
     }
+  }
+
+  /**
+   * do the filesystemchecks
+   */
+  int FileService::computeFilesystemCheck()
+  {
+    elog.log( INFO, "%s: compute filesestem check...", FileService::tag );
+    // 
+    // first the "normal way"
+    //
+    FileService::checkFileSys();
+    //
+    // than a bit more aggressive, if needed
+    //
+    if ( FileService::checkFileSysSizes() != 0 )
+    {
+      //
+      // free flash memory....
+      //
+      // first: delete other than current
+      // TODO: WARNING
+      FileService::deleteOtherThanCurrent();
+      //
+      // check again
+      //
+      if ( FileService::checkFileSysSizes() != 0 )
+      {
+        // ALERT!
+        // remove current file
+        // TODO: ERROR MESSAGE
+        elog.log( ERROR, "%s: delete current file(s) while no space left for measures...", FileService::tag );
+        FileService::deleteTodayFile();
+      }
+    }
+    return 0;
   }
 
   /**

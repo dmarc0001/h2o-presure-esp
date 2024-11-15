@@ -23,6 +23,7 @@ namespace prefs
     static WlanState wlanState;              //! is wlan disconnected, connected etc....
     static size_t fsTotalSpace;              //! total space in FS
     static size_t fsUsedSpace;               //! free Space in FS
+    static bool forceFilesystemCheck;        //! force an filesystemcheck from user initiated
 
     public:
     static volatile bool wasMeasure;  //! system was measuring
@@ -88,16 +89,24 @@ namespace prefs
     {
       return ( AppStati::fsTotalSpace - AppStati::fsUsedSpace );
     }
-    static String getTimeZone();                   //! get my timezone
-    static bool setTimeZone( const String & );     //! set my timezone
-    static bool setTimezoneOffset( long );         //! set timezione offst instread of timezone
-    static long getTimezoneOffset();               //! get the offset for timezone
-    static uint8_t getLogLevel();                  //! get Logging
-    static bool setLogLevel( uint8_t );            //! set Logging
-    static uint32_t getMeasureInterval_s();        //! get interval bwtween two measures
-    static bool setMeasureInterval_s( uint32_t );  //! set Interval bewtween two measures
-    static uint8_t getLedBrightness();             //! get led ground brightness
-    static bool setLedBrightness( uint8_t );       //! set led ground brightness
+    static String getTimeZone();                      //! get my timezone
+    static bool setTimeZone( const String & );        //! set my timezone
+    static bool setTimezoneOffset( long );            //! set timezione offst instread of timezone
+    static long getTimezoneOffset();                  //! get the offset for timezone
+    static uint8_t getLogLevel();                     //! get Logging
+    static bool setLogLevel( uint8_t );               //! set Logging
+    static uint32_t getMeasureInterval_s();           //! get interval bwtween two measures
+    static bool setMeasureInterval_s( uint32_t );     //! set Interval bewtween two measures
+    static uint8_t getLedBrightness();                //! get led ground brightness
+    static bool setLedBrightness( uint8_t );          //! set led ground brightness
+    static void setForceFilesystemCheck( bool _set )  //! set / unset force an filesystem check
+    {
+      AppStati::forceFilesystemCheck = _set;
+    }
+    static bool getForceFilesystemCheck()  // # ask for forced filesystemchcek
+    {
+      return AppStati::forceFilesystemCheck;
+    }
 
     private:
     static bool getIfPrefsInit();        //! internal, is preferences initialized?
