@@ -11,6 +11,9 @@ namespace measure_h2o
   WiFiManager WifiConfig::wm;
   WiFiManagerParameter WifiConfig::custom_field;
 
+  /**
+   * initialize the static object
+   */
   void WifiConfig::init()
   {
     char hostname[ 32 ];
@@ -67,6 +70,9 @@ namespace measure_h2o
     elog.log( INFO, "%s: initialize wifi...OK", WifiConfig::tag );
   }
 
+  /**
+   * if an wifi event occurs, tell me the event
+   */
   void WifiConfig::wifiEventCallback( arduino_event_t *event )
   {
     switch ( event->event_id )
@@ -107,6 +113,9 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * if an event for systemtime, tell me this
+   */
   void WifiConfig::timeSyncNotificationCallback( struct timeval * )
   {
     sntp_sync_status_t state = sntp_get_sync_status();
@@ -147,6 +156,9 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * if an config event from wifi manager occurs, tell me that
+   */
   void WifiConfig::configModeCallback( WiFiManager *myWiFiManager )
   {
     elog.log( INFO, "%s: config callback, enter config mode...", WifiConfig::tag );

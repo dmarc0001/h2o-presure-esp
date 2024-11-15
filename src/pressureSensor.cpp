@@ -15,6 +15,9 @@ namespace measure_h2o
 
   TaskHandle_t PrSensor::taskHandle{ nullptr };
 
+  /**
+   * init the static object
+   */
   void PrSensor::init()
   {
     elog.log( DEBUG, "%s: init pressure measure object...", PrSensor::tag );
@@ -27,6 +30,9 @@ namespace measure_h2o
     elog.log( DEBUG, "%s: init pressure measure object...OK", PrSensor::tag );
   }
 
+  /**
+   * start the task
+   */
   void PrSensor::start()
   {
     elog.log( INFO, "%s: Task start...", PrSensor::tag );
@@ -42,6 +48,9 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * calibre the sensor
+   */
   bool PrSensor::calibreSensor()
   {
     //
@@ -70,6 +79,9 @@ namespace measure_h2o
     return true;
   }
 
+  /**
+   * measure the tension from sensor for presure
+   */
   uint32_t PrSensor::getCurrentValue()
   {
     PrSensor::pauseMeasureTask = true;
@@ -108,6 +120,9 @@ namespace measure_h2o
       prefs::AppStati::setCurrentPressureBar( cBar );
   }
 
+  /**
+   * the task for sensor
+   */
   void PrSensor::mTask( void * )
   {
     static uint64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_S * 1000000ULL;

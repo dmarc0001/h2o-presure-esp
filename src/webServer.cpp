@@ -13,6 +13,9 @@ namespace measure_h2o
   // instantiate a webserver
   AsyncWebServer APIWebServer::server( 80 );
 
+  //
+  // small html pages in GERNAM language
+  //
   const char intervall_html[] PROGMEM = R"rawliteral(
   <!DOCTYPE HTML>
   <html lang="de-DE">
