@@ -16,7 +16,7 @@ TODO:
   - HTTP-GET /api/v1/set-interval?interval=10 : set measure interval
   - HTTP-GET /api/v1/set-led?brightness=128 : set les stripe ground brightness
   
-## liglevels (numeric)
+## loglevels (numeric)
     EMERGENCY = 0,
     ALERT = 1,
     CRITICAL = 2,
