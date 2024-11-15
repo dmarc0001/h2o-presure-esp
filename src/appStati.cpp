@@ -10,7 +10,6 @@ namespace prefs
   //
   constexpr const char *CHECKVAL{ "conf_init" };
   constexpr const char *INITVAL{ "wasInit" };
-
   constexpr const char *DEBUGSETTING{ "debugval" };
   constexpr const char *LOC_HOSTNAME{ "hostname" };
   constexpr const char *LOC_TIMEZONE{ "loc_tz" };
@@ -39,6 +38,9 @@ namespace prefs
   size_t AppStati::fsTotalSpace{ 0 };
   size_t AppStati::fsUsedSpace{ 0 };
 
+  /**
+   * init object
+   */
   void AppStati::init()
   {
     AppStati::lPref.begin( APPNAME, false );
@@ -89,6 +91,9 @@ namespace prefs
     return ( AppStati::lPref.getString( LOC_HOSTNAME, DEFAULT_HOSTNAME ) );
   }
 
+  /**
+   * get the minimal value for sensor meaning "no pressure" or "pressure == 0"
+   */
   uint32_t AppStati::getCalibreMinVal()
   {
     if ( AppStati::calibreMinVal == std::numeric_limits< uint32_t >::max() )
@@ -98,6 +103,9 @@ namespace prefs
     return AppStati::calibreMinVal;
   }
 
+  /**
+   * get the maximal value for "maximal pressure"
+   */
   uint32_t AppStati::getCalibreMaxVal()
   {
     if ( AppStati::calibreMaxVal == std::numeric_limits< uint32_t >::max() )
@@ -107,6 +115,9 @@ namespace prefs
     return AppStati::calibreMaxVal;
   }
 
+  /**
+   * get the factor for compute the real preasure
+   */
   double AppStati::getCalibreFactor()
   {
     if ( AppStati::calibreFactor < 0.0F )
@@ -116,24 +127,36 @@ namespace prefs
     return AppStati::calibreFactor;
   }
 
+  /**
+   * get the value for preasure == 0
+   */
   void AppStati::setCalibreMinVal( uint32_t _val )
   {
     AppStati::lPref.putUInt( CAL_MINVAL, _val );
     AppStati::calibreMinVal = _val;
   }
 
+  /**
+   * get the value for presure MAX
+   */
   void AppStati::setCalibreMaxVal( uint32_t _val )
   {
     AppStati::lPref.putUInt( CAL_MAXVAL, _val );
     AppStati::calibreMaxVal = _val;
   }
 
+  /**
+   *  set the compute factor for "real" preasure
+   */
   void AppStati::setCalibreFactor( double _val )
   {
     AppStati::lPref.putDouble( CAL_FACTOR, _val );
     AppStati::calibreFactor = _val;
   }
 
+  /**
+   * set the measured tension
+   */
   void AppStati::setCurrentMiliVolts( uint32_t _val )
   {
     if ( AppStati::currentMiliVolts != _val )
@@ -143,6 +166,9 @@ namespace prefs
     }
   }
 
+  /**
+   * compute the real preasure
+   */
   void AppStati::setCurrentPressureBar( float _val )
   {
     //

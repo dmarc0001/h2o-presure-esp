@@ -11,7 +11,7 @@ namespace prefs
   class AppStati
   {
     private:
-    static const char *tag;
+    static const char *tag;                  //! logging tag
     static bool wasInit;                     //! was the prefs object initialized?
     static Preferences lPref;                //! static preferences object
     static uint32_t calibreMinVal;           //! minimal value by calibr
@@ -30,61 +30,61 @@ namespace prefs
 
     public:
     static void init();
-    static String getHostName();  //! get my own hostname
-    static bool getIsSpiffsInit()
+    static String getHostName();   //! get my own hostname
+    static bool getIsSpiffsInit()  //! is SPIFFS initialized?
     {
       return Filesystem::getIsOkay();
     }
-    static uint32_t getCalibreMinVal();
-    static uint32_t getCalibreMaxVal();
-    static double getCalibreFactor();
-    static uint32_t getCurrentMiliVolts()
+    static uint32_t getCalibreMinVal();    //! get minimal value
+    static uint32_t getCalibreMaxVal();    //! get the minimal value for sensor meaning "no pressure" or "pressure == 0"
+    static double getCalibreFactor();      //! factor for comuting the "real" pressure
+    static uint32_t getCurrentMiliVolts()  //! current measured tension from AD Chip
     {
       return AppStati::currentMiliVolts;
     }
-    static float getCurrentPressureBar()
+    static float getCurrentPressureBar()  //! get the current measured pressure from sensor
     {
       return AppStati::currentPressureBar;
     }
     //
-    static void setCalibreMinVal( uint32_t );
-    static void setCalibreMaxVal( uint32_t );
-    static void setCalibreFactor( double );
-    static void setCurrentMiliVolts( uint32_t );
-    static void setCurrentPressureBar( float );
-    static bool getWasChanged()
+    static void setCalibreMinVal( uint32_t );     //! set the value for pressure == 0
+    static void setCalibreMaxVal( uint32_t );     //! set the value for pressure == max
+    static void setCalibreFactor( double );       //! set the factor for computing the "real" preasure
+    static void setCurrentMiliVolts( uint32_t );  //! set the current tension
+    static void setCurrentPressureBar( float );   //! set the current pressure
+    static bool getWasChanged()                   //! was the pressure changed since last measure
     {
       return AppStati::presureWasChanged;
     }
-    static void resetWasChanged()
+    static void resetWasChanged()  //! reset changed indicator
     {
       AppStati::presureWasChanged = false;
     }
-    static void setWlanState( WlanState _state )
+    static void setWlanState( WlanState _state )  //! set the state of the WLAN
     {
       AppStati::wlanState = _state;
     }
-    static WlanState getWlanState()
+    static WlanState getWlanState()  //! get the stsate of the WLAN
     {
       return AppStati::wlanState;
     }
-    static void setFsTotalSpace( size_t _size )
+    static void setFsTotalSpace( size_t _size )  //! set total space of my Flash
     {
       AppStati::fsTotalSpace = _size;
     }
-    static size_t getFsTotalSpace()
+    static size_t getFsTotalSpace()  //! get the total space of the flash
     {
       return AppStati::fsTotalSpace;
     }
-    static void setFsUsedSpace( size_t _size )
+    static void setFsUsedSpace( size_t _size )  //! set used flash size
     {
       AppStati::fsUsedSpace = _size;
     }
-    static size_t getFsUsedSpace()
+    static size_t getFsUsedSpace()  //! get the used flash size
     {
       return AppStati::fsUsedSpace;
     }
-    static size_t getFsFreeSize()
+    static size_t getFsFreeSize()  //! comuute and return the free size
     {
       return ( AppStati::fsTotalSpace - AppStati::fsUsedSpace );
     }
