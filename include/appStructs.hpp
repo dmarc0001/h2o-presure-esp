@@ -7,6 +7,9 @@
 namespace measure_h2o
 {
 
+  //
+  // enum for WLAN Stati there was importent for this app
+  //
   enum WlanState : uint8_t
   {
     DISCONNECTED,
@@ -16,7 +19,9 @@ namespace measure_h2o
     FAILED
   };
 
-
+  //
+  // struct for transport measured data
+  //
   struct presure_data_t
   {
     String timestamp;    //! timestamp
@@ -29,6 +34,7 @@ namespace measure_h2o
 
 }  // namespace measure_h2o
 
+// maybe:
 //
 // <?xml version="1.0" encoding"UTF-8"?>
 // <series>
@@ -42,3 +48,5 @@ namespace measure_h2o
 //   <elem timestamp="123456795" pressure="1.25" milivolt="354" />
 //   <elem timestamp="123456796" pressure="1.45" milivolt="354" />
 // </series>
+// or simnple CSV
+//
