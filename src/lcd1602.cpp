@@ -6,6 +6,9 @@ namespace measure_h2o
 {
   const char *MLCD::tag{ "MLCD" };
 
+  /**
+   * constructor
+   */
   MLCD::MLCD( uint8_t _cols, uint8_t _rows, int _sda, int _scl )
       : Waveshare_LCD1602( _cols, _rows )
       , printedPresureTitle{ false }
@@ -16,13 +19,17 @@ namespace measure_h2o
       , firstLine()
       , secondLine()
   {
-    elog.log( DEBUG, "%s: MLCD init...", MLCD::tag );
+    elog.log( DEBUG, "%s: MLCD create...", MLCD::tag );
     Wire.setPins( _sda, _scl );
     vSemaphoreCreateBinary( displaySem );
   }
 
+  /**
+   * init display and variables
+   */
   void MLCD::init()
   {
+    elog.log( DEBUG, "%s: MLCD initialize...", MLCD::tag );
     printedPresureTitle = false;
     printedTension = false;
     printedAlert = false;
@@ -36,8 +43,11 @@ namespace measure_h2o
     this->customSymbol( 1, measure );
     this->customSymbol( 2, ant );
     this->printGreeting();
-  }  // namespace measure_h2o
+  }
 
+  /**
+   * clear the display
+   */
   void MLCD::clear()
   {
     printedPresureTitle = false;
@@ -48,6 +58,9 @@ namespace measure_h2o
     Waveshare_LCD1602::clear();
   }
 
+  /**
+   * print greeting message
+   */
   void MLCD::printGreeting()
   {
     this->setCursor( 0, 0 );
@@ -56,6 +69,9 @@ namespace measure_h2o
     this->send_string( "   S T A R T    " );
   }
 
+  /**
+   * print a single line
+   */
   void MLCD::printLine( String &_line )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -71,6 +87,9 @@ namespace measure_h2o
     }
   }
 
+  /**
+   * print current pressure
+   */
   void MLCD::printPresure( float _pressureBar )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -95,6 +114,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print current tension
+   */
   void MLCD::printTension( float _tension )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -119,6 +141,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print current time
+   */
   void MLCD::printTime( const String &_timeStr )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -131,6 +156,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print heartbeat
+   */
   void MLCD::printHartbeat()
   {
     static uint8_t beat{ 0 };
@@ -165,6 +193,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print indicator that the app is measuring
+   */
   void MLCD::printMeasureMark()
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -176,11 +207,17 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * hide indicator
+   */
   void MLCD::hideMeasureMark()
   {
     showMeasureMark = false;
   }
 
+  /**
+   * print an alert message
+   */
   void MLCD::printAlert( String &_msg )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -203,6 +240,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print a common message
+   */
   void MLCD::printMessage( String &_msg )
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -225,6 +265,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * print a sign für WiFi connection
+   */
   void MLCD::printAntMark()
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )
@@ -235,6 +278,9 @@ namespace measure_h2o
     xSemaphoreGive( displaySem );
   }
 
+  /**
+   * hide the sign für WiFi connection
+   */
   void MLCD::hideAntMark()
   {
     if ( xSemaphoreTake( displaySem, pdMS_TO_TICKS( 2000 ) ) == pdTRUE )

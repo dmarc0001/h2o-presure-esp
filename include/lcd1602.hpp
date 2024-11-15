@@ -12,32 +12,32 @@ namespace measure_h2o
   {
     private:
     static const char *tag;
-    bool printedPresureTitle;
-    bool printedTension;
-    bool printedAlert;
-    bool printedMessage;
-    bool showMeasureMark;
-    float lastPressure;
-    float lastTension;
-    String firstLine, secondLine;
-    SemaphoreHandle_t displaySem;  //! is access to files busy
+    bool printedPresureTitle;      //! was presure text displayed?
+    bool printedTension;           //! was tension prited?
+    bool printedAlert;             //! was alert printed?
+    bool printedMessage;           //! was message printed=
+    bool showMeasureMark;          //! was indicator for measuring printed?
+    float lastPressure;            //! history last pressure
+    float lastTension;             //! history, last tension
+    String firstLine, secondLine;  //! text in first and second line
+    SemaphoreHandle_t displaySem;  //! is access to display busy
 
     public:
-    MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );
-    void init();
-    void clear();
-    void printPresure( float );
-    void printTension( float );
-    void printTime( const String & );
-    void printHartbeat();
-    void printMeasureMark();
-    void hideMeasureMark();
-    void printAlert( String & );
-    void printMessage( String & );
-    void printGreeting();
-    void printLine( String & );
-    void printAntMark();
-    void hideAntMark();
+    MLCD( uint8_t lcd_cols, uint8_t lcd_rows, int sda, int scl );  //! constructor, of course
+    void init();                                                   //! init this  object
+    void clear();                                                  //! clear the display
+    void printPresure( float );                                    //! print current pressure
+    void printTension( float );                                    //! print current tension
+    void printTime( const String & );                              //! print current time
+    void printHartbeat();                                          //! print heartbeat
+    void printMeasureMark();                                       //! print indicator that the app is measuring
+    void hideMeasureMark();                                        //! hide indicator
+    void printAlert( String & );                                   //! print an alert message
+    void printMessage( String & );                                 //! print a common message
+    void printGreeting();                                          //! print greeting message
+    void printLine( String & );                                    //! print a single line
+    void printAntMark();                                           //! print a sign für WiFi connection
+    void hideAntMark();                                            //! hide a sign für WiFi connection
   };
 
   using sysDisplay = std::shared_ptr< MLCD >;
