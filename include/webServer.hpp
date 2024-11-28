@@ -2,6 +2,7 @@
 #include <SPIFFS.h>
 #include <WiFi.h>
 #include <AsyncTCP.h>
+// #include <PrometheusArduino.h>
 #include "ESPAsyncWebServer.h"
 
 namespace measure_h2o
@@ -28,7 +29,8 @@ namespace measure_h2o
     static void apiGetRestFilesystemCheck( AsyncWebServerRequest * );             //! trigger the filesystem checker...
     static void apiGetRestFilesystemStatus( AsyncWebServerRequest * );            //! get an overview for filesystem as json
     static void apiGetRestLedBrightness( AsyncWebServerRequest * );               //! get LED Stripe brightness
-    static void apiGetRestFlashAmount( AsyncWebServerRequest * );                 //! get flash amount'S
+    static void apiGetRestFlashAmount( AsyncWebServerRequest * );                 //! get flash amount's
+    static void onGetMetrics( AsyncWebServerRequest * );                          //! get sensors metrics
     static void deliverFileToHttpd( String &, AsyncWebServerRequest * );          //! deliver content file via http
     static void handleNotPhysicFileSources( String &, AsyncWebServerRequest * );  //! handle virtual files/paths
     static String setContentTypeFromFile( String &, const String & );             //! find content type

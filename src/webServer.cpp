@@ -1,6 +1,7 @@
 #include <memory>
 #include <esp_chip_info.h>
 #include <esp_spiffs.h>
+#include <cstdlib>
 #include "webServer.hpp"
 #include "statics.hpp"
 #include "appPrefs.hpp"
@@ -112,6 +113,7 @@ namespace measure_h2o
     //
     APIWebServer::server.on( "^/$", HTTP_GET, APIWebServer::onIndex );
     APIWebServer::server.on( "^/index\\.html$", HTTP_GET, APIWebServer::onIndex );
+    APIWebServer::server.on( "^/metrics$", HTTP_GET, APIWebServer::onGetMetrics );
     APIWebServer::server.on( "^\\/api\\/v1\\/set-(.*)\?(.*)$", HTTP_GET, APIWebServer::onApiV1Set );
     APIWebServer::server.on( "^\\/api\\/v1\\/(.*)$", HTTP_GET, APIWebServer::onApiV1 );
     APIWebServer::server.on( "^\\/.*$", HTTP_GET, APIWebServer::onFilesReq );
@@ -147,6 +149,34 @@ namespace measure_h2o
     prefs::AppStati::httpActive = true;
     String file( request->url() );
     APIWebServer::deliverFileToHttpd( file, request );
+  }
+
+  void APIWebServer::onGetMetrics( AsyncWebServerRequest *request )
+  {
+    static u8_t counter{ 0 };
+
+    elog.log( DEBUG, "%s: access metrics...", APIWebServer::tag );
+    prefs::AppStati::httpActive = true;
+    //
+    // per LINE:
+    // metric_name [
+    //   "{" label_name "=" `"` label_value `"` { "," label_name "=" `"` label_value `"` } [ "," ] "}"
+    // ] value [ timestamp ]
+    //
+    //
+    // https://prometheus.io/docs/instrumenting/exposition_formats/
+    //
+
+    char buffer[ 12 ];
+    String msg( "# TYPE pressure counter\n" );
+    snprintf( buffer, 8, "%04d\0", prefs::AppStati::getCurrentMiliVolts() );
+    msg += String( "pressure_pr_millivolts {meaning=\"millivolts\"} " ) + String( buffer ) + String( "\n" );
+    snprintf( buffer, 6, "%02.2f\0", prefs::AppStati::getCurrentPressureBar() );
+    msg += String( "pressure_pr_value {meaning=\"water pressure\"} " ) + String( buffer ) + String( "\n" );
+    request->send( 200, "text/plain", msg );
+    return;
+    // String msg = "ERROR api call v1 for <" + parameter + ">";
+    // APIWebServer::onServerError( request, 303, msg );
   }
 
   /**
