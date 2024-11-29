@@ -122,7 +122,7 @@ namespace measure_h2o
   int FileService::computeFilesystemCheck()
   {
     elog.log( INFO, "%s: compute filesestem check...", FileService::tag );
-    // 
+    //
     // first the "normal way"
     //
     FileService::checkFileSys();
@@ -225,6 +225,7 @@ namespace measure_h2o
     size_t flash_used;
     size_t flash_free;
 
+    elog.log( DEBUG, "%s: check filesystem size", FileService::tag );
     esp_err_t errorcode = esp_spiffs_info( prefs::WEB_PARTITION_LABEL, &flash_total, &flash_used );
     if ( errorcode == ESP_OK )
     {
