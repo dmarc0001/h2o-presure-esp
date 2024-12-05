@@ -153,7 +153,7 @@ namespace measure_h2o
 
   void APIWebServer::onGetMetrics( AsyncWebServerRequest *request )
   {
-    char buffer[ 12 ];
+    char buffer[ 24 ];
     size_t flash_total;
     size_t flash_used;
     size_t flash_free;
@@ -170,15 +170,21 @@ namespace measure_h2o
     // https://prometheus.io/docs/instrumenting/exposition_formats/
     //
 
+    //
     // say prometheus that values are conters
+    //
     String msg( "# TYPE pressure counter\n" );
     // print last measured millivolts
     snprintf( buffer, 8, "%04d\0", prefs::AppStati::getCurrentMiliVolts() );
     msg += String( "pressure_measured_millivolts {meaning=\"millivolts\"} " ) + String( buffer ) + String( "\n" );
+    //
     // print last measured water pressure
+    //
     snprintf( buffer, 6, "%02.2f\0", prefs::AppStati::getCurrentPressureBar() );
     msg += String( "pressure_measured_pressure_value {meaning=\"water pressure\"} " ) + String( buffer ) + String( "\n" );
+    //
     // check flash memory
+    //
     esp_err_t errorcode = esp_spiffs_info( prefs::WEB_PARTITION_LABEL, &flash_total, &flash_used );
     if ( errorcode == ESP_OK )
     {
@@ -186,16 +192,30 @@ namespace measure_h2o
       prefs::AppStati::setFsUsedSpace( flash_used );
       flash_free = flash_total - flash_used;
     }
+    //
     // print total flash memory
+    //
     snprintf( buffer, 11, "%08d\0", prefs::AppStati::getFsTotalSpace() );
     msg += String( "pressure_total_flash {meaning=\"total space on flash\"} " ) + String( buffer ) + String( "\n" );
+    //
     // print used flash memory
+    //
     snprintf( buffer, 11, "%08d\0", prefs::AppStati::getFsUsedSpace() );
     msg += String( "pressure_used_flash {meaning=\"used space on flash\"} " ) + String( buffer ) + String( "\n" );
-    // print freeram
+    //
+    // print free ram
+    //
     snprintf( buffer, 11, "%08d\0", ESP.getFreeHeap() );
-    msg += String( "pressure_free_ram {meaning=\"free ram on esp32h\"} " ) + String( buffer ) + String( "\n" );
+    msg += String( "pressure_free_ram {meaning=\"free ram on esp32\"} " ) + String( buffer ) + String( "\n" );
+    //
+    // print uptime in sec
+    //
+    int64_t uptime = static_cast< int64_t >( esp_timer_get_time() / 1000000LL );
+    snprintf( buffer, 16, "%016d\0", uptime );
+    msg += String( "pressure_uptime {meaning=\"esp32 uptime secounds\"} " ) + String( buffer ) + String( "\n" );
+    //
     // send to client
+    //
     request->send( 200, "text/plain", msg );
     return;
     // String msg = "ERROR api call v1 for <" + parameter + ">";
