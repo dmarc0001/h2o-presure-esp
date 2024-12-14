@@ -425,7 +425,7 @@ namespace measure_h2o
     if ( request->hasParam( "from" ) )
     {
       String dateNameStr = request->getParam( "from" )->value().substring( 0, 10 );
-      String fileName( "/data/" );
+      String fileName( prefs::DATA_PATH );
       fileName += dateNameStr;
       fileName += "-pressure.csv";
       elog.log( DEBUG, "%s: apiGetRestDataFileFrom try to deliver <%s>...", APIWebServer::tag, fileName.c_str() );
