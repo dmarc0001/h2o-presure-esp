@@ -17,8 +17,9 @@ namespace measure_h2o
     static WiFiManager wm;  //! global wm instance
 
     public:
-    static void init();  //! init wifi and/or wifi manager
-    static void loop();  //! loop for webserver wifi callmanager
+    static void init();    //! init wifi and/or wifi manager
+    static void reInit();  //! reinit wifi and/or wifi manager
+    static void loop();    //! loop for webserver wifi callmanager
 
     private:
     static void timeSyncNotificationCallback( struct timeval * );  // callback for ntp

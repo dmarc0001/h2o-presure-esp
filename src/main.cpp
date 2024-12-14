@@ -101,6 +101,7 @@ void loop()
   static uint64_t nextTimeHartbeat = HARTBEATTIME;
   static uint64_t nextAntTime = ANTTIME;
   static uint64_t nextTimeCalibrCheck = CALIBRTIME;
+  static uint64_t nextTimePanicReboot{ 0 };
   static bool antMarkShow{ false };
   uint64_t nowTime = esp_timer_get_time();
 
@@ -325,8 +326,16 @@ void checkOnlineState()
       {
         msg = "WiFi getrennt!";
         display->printLine( msg );
-        elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
-        APIWebServer::stop();
+        elog.log( WARNING, "main: ip connectivity lost!" );
+        // elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
+        // APIWebServer::stop();
+        //
+        // reinit WIFI
+        //
+        delay( 500 );
+        elog.log( WARNING, "main: try to reconnect..." );
+        currWLANState = new_connected;
+        WifiConfig::reInit();
       }
     }
     else
