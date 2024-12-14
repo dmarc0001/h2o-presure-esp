@@ -327,15 +327,15 @@ void checkOnlineState()
         msg = "WiFi getrennt!";
         display->printLine( msg );
         elog.log( WARNING, "main: ip connectivity lost!" );
-        // elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
-        // APIWebServer::stop();
         //
         // reinit WIFI
         //
         delay( 500 );
         elog.log( WARNING, "main: try to reconnect..." );
-        currWLANState = new_connected;
         WifiConfig::reInit();
+        elog.log( WARNING, "main: stop webserver..." );
+        APIWebServer::stop();
+        elog.log( WARNING, "main: stop webserver...OK" );
       }
     }
     else
@@ -350,8 +350,15 @@ void checkOnlineState()
         //
         msg = "WiFi getrennt!";
         display->printLine( msg );
-        elog.log( WARNING, "main: ip connectivity lost, stop webserver." );
+        //
+        // reinit WIFI
+        //
+        delay( 500 );
+        elog.log( WARNING, "main: try to reconnect..." );
+        WifiConfig::reInit();
+        elog.log( WARNING, "main: stop webserver..." );
         APIWebServer::stop();
+        elog.log( WARNING, "main: stop webserver...OK" );
       }
     }
     // mark new value
