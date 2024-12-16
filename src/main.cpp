@@ -300,7 +300,7 @@ void checkOnlineState()
     if ( currWLANState == WlanState::DISCONNECTED || currWLANState == WlanState::FAILED || currWLANState == WlanState::SEARCHING )
     {
       //
-      // system was not connected 
+      // system was not connected
       // was not functional for webservice
       //
       if ( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED )
@@ -324,6 +324,7 @@ void checkOnlineState()
         // new connection, start webservice
         //
         elog.log( INFO, "main: ip connectivity found, start webserver." );
+        delay( 500 );
         APIWebServer::start();
       }
       else
