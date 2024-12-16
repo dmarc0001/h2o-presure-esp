@@ -53,8 +53,8 @@ namespace prefs
   constexpr uint64_t FILE_SYSTEM_SIZE_CHECK_YS = 59ULL * 60ULL * 1000000ULL;        //! delay time for check filesystem ( one hour)
   constexpr size_t MIN_FILE_SYSTEM_FREE_SIZE = 300000;                              //! minimal free size on filesystem
   constexpr const char *DAYLY_FILE_NAME{ "%04d-%02d-%02d-pressure.csv" };           //! data dayly for pressure
-  constexpr const char *DAYLY_FILE_PATTERN{ "^/data/\\d\\d\\d\\d-\\d\\d-\\d\\d-presure.csv$" };  //! filename pattern
-  constexpr time_t MAX_DATA_FILE_AGE_SEC = 5L * 24L * 60L * 60L;                                 //! max age for files
+  constexpr const char *DAYLY_FILE_PATTERN{ "^/data/\\d\\d\\d\\d-\\d\\d-\\d\\d-pressure.csv$" };  //! filename pattern
+  constexpr time_t MAX_DATA_FILE_AGE_SEC = 5L * 24L * 60L * 60L;                                  //! max age for files
 
   //
   // LED COLORS
