@@ -71,7 +71,7 @@ namespace measure_h2o
         //
         // check if filesystem free size too small
         //
-        FileService::computeFilesystemCheck();
+        FileService::computeAllFilesystemChecks();
         //
         // next test
         //
@@ -83,7 +83,7 @@ namespace measure_h2o
         //
         // check if filenames have to switch
         //
-        FileService::checkFileSys();
+        FileService::removeOutdatedFiles();
         nextTimeToFSCheck = nowTime + prefs::FILE_TASK_CHECK_DELAY_YS;
       }
 
@@ -95,7 +95,7 @@ namespace measure_h2o
         if ( prefs::AppStati::getForceFilesystemCheck() )
         {
           prefs::AppStati::setForceFilesystemCheck( false );
-          FileService::computeFilesystemCheck();
+          FileService::computeAllFilesystemChecks();
         }
         //
         // check if data have to save
@@ -117,15 +117,15 @@ namespace measure_h2o
   }
 
   /**
-   * do the filesystemchecks
+   * do all the filesystemchecks
    */
-  int FileService::computeFilesystemCheck()
+  int FileService::computeAllFilesystemChecks()
   {
     elog.log( INFO, "%s: compute filesestem check...", FileService::tag );
     //
     // first the "normal way"
     //
-    FileService::checkFileSys();
+    FileService::removeOutdatedFiles();
     //
     // than a bit more aggressive, if needed
     //
@@ -133,17 +133,16 @@ namespace measure_h2o
     {
       //
       // free flash memory....
+      // delete other than current
       //
-      // first: delete other than current
-      // TODO: WARNING
-      FileService::deleteOtherThanCurrent();
+      FileService::removeOtherThanCurrentFiles();
       //
       // check again
       //
       if ( FileService::checkFileSysSizes() != 0 )
       {
         // ALERT!
-        // remove current file
+        // last chance: remove current file
         // TODO: ERROR MESSAGE
         elog.log( ERROR, "%s: delete current file(s) while no space left for measures...", FileService::tag );
         FileService::deleteTodayFile();
@@ -155,7 +154,7 @@ namespace measure_h2o
   /**
    * delete files there not the current file
    */
-  int FileService::deleteOtherThanCurrent()
+  int FileService::removeOtherThanCurrentFiles()
   {
     //
     // find files in path prefs::DATA_PATH
@@ -234,9 +233,6 @@ namespace measure_h2o
       flash_free = flash_total - flash_used;
       elog.log( DEBUG, "%s: SPIFFS total %07d, used %07d, free %07d, min-free: %07d", FileService::tag, flash_total, flash_used,
                 flash_free, prefs::MIN_FILE_SYSTEM_FREE_SIZE );
-      //
-      // TODO: esp_err_t esp_spiffs_gc(const char *partition_label, size_t size_to_gc)
-      //
       if ( prefs::MIN_FILE_SYSTEM_FREE_SIZE > flash_free )
       {
         elog.log( WARNING, "%s: free memory too low, action needed", FileService::tag );
@@ -328,13 +324,11 @@ namespace measure_h2o
   }
 
   /**
-   * chcek filesystem if i have to care data
+   * check filesystem if i have to care data
+   * this is the "normal" way
    */
-  int FileService::checkFileSys()
+  int FileService::removeOutdatedFiles()
   {
-    //
-    FileService::checkFileSysSizes();
-
     //
     // find files in path prefs::DATA_PATH
     //
@@ -411,11 +405,15 @@ namespace measure_h2o
       time_t currentTimeStamp = makeTime( currentTime );
       //
       // is the file older than max age?
-      // TODO: TEST it if NTP works
-      if ( std::abs( currentTimeStamp - fileTimeStamp ) > prefs::MAX_DATA_FILE_AGE_SEC )
+      // Test it if NTP works
+      //
+      if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
       {
-        elog.log( INFO, "%s: file <%s> is too old, delete it!", FileService::tag, nameShort.c_str() );
-        SPIFFS.remove( fileName );
+        if ( std::abs( currentTimeStamp - fileTimeStamp ) > prefs::MAX_DATA_FILE_AGE_SEC )
+        {
+          elog.log( INFO, "%s: file <%s> is too old, delete it!", FileService::tag, nameShort.c_str() );
+          SPIFFS.remove( fileName );
+        }
       }
       // else
       //   elog.log( DEBUG, "%s: file <%s> in range of age, do nothing.", FileService::tag, nameShort.c_str() );
