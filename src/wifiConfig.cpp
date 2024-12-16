@@ -50,11 +50,12 @@ namespace measure_h2o
   void WifiConfig::reInit()
   {
     elog.log( INFO, "%s: initialize wifi...", WifiConfig::tag );
-    prefs::AppStati::setWlanState( WlanState::FAILED );
+    prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
     String msg = "verbinde WiFi...";
     display->printLine( msg );
     if ( !WifiConfig::wm.autoConnect( prefs::WIFI_CONFIG_AP, prefs::WIFI_CONFIG_PASS ) )
     {
+      prefs::AppStati::setWlanState( WlanState::FAILED );
       String msg = "WiFi Verbindung";
       display->printAlert( msg );
       elog.log( ERROR, "%s: wifi not connected!", WifiConfig::tag );
@@ -171,12 +172,13 @@ namespace measure_h2o
   void WifiConfig::configModeCallback( WiFiManager *myWiFiManager )
   {
     elog.log( INFO, "%s: enter WiFi config mode...", WifiConfig::tag );
+    prefs::AppStati::setWlanState( WlanState::CONFIGPORTAL );
     IPAddress apAddr = WiFi.softAPIP();
     elog.log( INFO, "%s: Access Point IP: <%s>...", WifiConfig::tag, apAddr.toString() );
     auto pSSID = myWiFiManager->getConfigPortalSSID();
-    String msg = String("IP: ")  + apAddr.toString();
-    display->printLine(msg);
-    display->printLine(pSSID);
+    String msg = String( "IP: " ) + apAddr.toString();
+    display->printLine( msg );
+    display->printLine( pSSID );
     elog.log( INFO, "%s: AP SSID: <%s>...", WifiConfig::tag, pSSID.c_str() );
   }
 
