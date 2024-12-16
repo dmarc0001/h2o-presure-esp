@@ -11,7 +11,7 @@ namespace measure_h2o
     private:
     static const char *tag;                    //! for debugging
     static bool is_sntp_init;                  //! was sntp
-    static WiFiManagerParameter custom_field;  //! for non-blocking
+    //static WiFiManagerParameter custom_field;  //! for non-blocking
 
     public:
     static WiFiManager wm;  //! global wm instance
