@@ -16,6 +16,7 @@ namespace measure_h2o
     SEARCHING,
     CONNECTED,
     TIMESYNCED,
+    CONFIGPORTAL,
     FAILED
   };
 
