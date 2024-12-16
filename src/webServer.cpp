@@ -105,6 +105,8 @@ namespace measure_h2o
   void APIWebServer::start()
   {
     elog.log( INFO, "%s: start webserver...", APIWebServer::tag );
+    // reset propertys
+    APIWebServer::server.reset();
     // Cache responses for 1 minutes (60 seconds)
     // fileroot in prefs::WEB_PATH
     APIWebServer::server.serveStatic( "/", SPIFFS, prefs::WEB_PATH ).setCacheControl( "max-age=60" );
