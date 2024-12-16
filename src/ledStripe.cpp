@@ -77,6 +77,7 @@ namespace measure_h2o
     static WlanState wlState = WlanState::DISCONNECTED;
     static bool measureShow{ false };
     static bool httpStateShow{ false };
+    static bool configPortalMarker{ false };
 
     elog.log( INFO, "%s: LED Task started...", MLED::tag );
     uint64_t now = esp_timer_get_time();
@@ -87,10 +88,32 @@ namespace measure_h2o
       //
       if ( now > nextTimeToCheck )
       {
+        nextTimeToCheck = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL );
+        //
+        // if config portal running
+        //
+        if ( prefs::AppStati::getWlanState() == CONFIGPORTAL )
+        {
+          if ( configPortalMarker )
+          {
+            ledStripe.setPixelColor( prefs::LED_LAN, prefs::LED_COLOR_WLAN_ERROR );
+            ledStripe.setPixelColor( prefs::LED_HTTP_ACTIVE, prefs::LED_COLOR_WLAN_ERROR );
+            ledStripe.setPixelColor( prefs::LED_TIMESYNC, prefs::LED_COLOR_BLACK );
+            ledStripe.setPixelColor( prefs::LED_MEASURESTATE, prefs::LED_COLOR_BLACK );
+          }
+          else
+          {
+            ledStripe.setPixelColor( prefs::LED_LAN, prefs::LED_COLOR_BLACK );
+            ledStripe.setPixelColor( prefs::LED_HTTP_ACTIVE, prefs::LED_COLOR_BLACK );
+            ledStripe.setPixelColor( prefs::LED_TIMESYNC, prefs::LED_COLOR_WLAN_ERROR );
+            ledStripe.setPixelColor( prefs::LED_MEASURESTATE, prefs::LED_COLOR_WLAN_ERROR );
+          }
+          configPortalMarker = !configPortalMarker;
+        }
+
         //
         // time to check if LED have to change
         //
-        nextTimeToCheck = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL );
         if ( prefs::AppStati::getWlanState() != wlState )
         {
           wlState = prefs::AppStati::getWlanState();
@@ -122,6 +145,7 @@ namespace measure_h2o
               ledStripe.setPixelColor( prefs::LED_LAN, prefs::LED_COLOR_WLAN_CONNECTED );
               ledStripe.setPixelColor( prefs::LED_TIMESYNC, prefs::LED_COLOR_WLAN_TIME_SYNCED );
               break;
+            case CONFIGPORTAL:
             case FAILED:
             default:
               ledStripe.setPixelColor( prefs::LED_LAN, prefs::LED_COLOR_WLAN_ERROR );
