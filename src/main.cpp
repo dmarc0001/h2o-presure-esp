@@ -44,7 +44,7 @@ void setup()
   FileService::init();
   //
   // timezone settings
-  // not correct functional on this chip :-(
+  // not correct functional on this c3 chip :-(
   //
   // elog.log( DEBUG, "main: set timezone (%s)...", prefs::AppStati::getTimeZone().c_str() );
   // setenv( "TZ", prefs::AppStati::getTimeZone().c_str(), 1 );
@@ -178,7 +178,7 @@ void loop()
 }
 
 /**
- * zyclic called function to set time from NTP
+ * cyclic called function to set time from NTP
  */
 time_t getNtpTime()
 {
@@ -300,12 +300,15 @@ void checkOnlineState()
     if ( currWLANState == WlanState::DISCONNECTED || currWLANState == WlanState::FAILED || currWLANState == WlanState::SEARCHING )
     {
       //
+      // system was not connected 
       // was not functional for webservice
       //
       if ( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED )
       {
+        // system is now connected
         if ( new_connected == WlanState::CONNECTED )
         {
+          // connected but not time synced
           msg = "WiFi verbunden!";
           display->printLine( msg );
           msg = "Warte auf TIME";
@@ -313,6 +316,7 @@ void checkOnlineState()
         }
         else
         {
+          // connected AND time synced
           msg = "Zeit sync OK!";
           display->printLine( msg );
         }
@@ -330,12 +334,12 @@ void checkOnlineState()
         //
         // reinit WIFI
         //
-        delay( 500 );
-        elog.log( WARNING, "main: try to reconnect..." );
-        WifiConfig::reInit();
-        elog.log( WARNING, "main: stop webserver..." );
-        APIWebServer::stop();
-        elog.log( WARNING, "main: stop webserver...OK" );
+        // delay( 500 );
+        // elog.log( WARNING, "main: stop webserver..." );
+        // APIWebServer::stop();
+        // elog.log( WARNING, "main: stop webserver...OK" );
+        // elog.log( WARNING, "main: try to reconnect..." );
+        // WifiConfig::reInit();
       }
     }
     else
@@ -353,12 +357,12 @@ void checkOnlineState()
         //
         // reinit WIFI
         //
-        delay( 500 );
-        elog.log( WARNING, "main: try to reconnect..." );
-        WifiConfig::reInit();
-        elog.log( WARNING, "main: stop webserver..." );
-        APIWebServer::stop();
-        elog.log( WARNING, "main: stop webserver...OK" );
+        // delay( 500 );
+        // elog.log( WARNING, "main: try to reconnect..." );
+        // WifiConfig::reInit();
+        // elog.log( WARNING, "main: stop webserver..." );
+        // APIWebServer::stop();
+        // elog.log( WARNING, "main: stop webserver...OK" );
       }
     }
     // mark new value
