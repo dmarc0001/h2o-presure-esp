@@ -1,3 +1,5 @@
+
+#include <Esp.h>
 #include <stdio.h>
 #include <Arduino.h>
 #include <memory>
@@ -18,11 +20,11 @@
 #include "webServer.hpp"
 #include "main.hpp"
 
-constexpr uint64_t DELAYTIME = 750000ULL;
-constexpr uint64_t HARTBEATTIME = 400000ULL;
-constexpr uint64_t ANTTIME = 1200000ULL;
-constexpr uint64_t CALIBRTIME = 255000ULL;
-constexpr uint64_t FORCE_DELAYTIME = 4000000ULL;
+constexpr int64_t DELAYTIME = 750000LL;
+constexpr int64_t HARTBEATTIME = 400000LL;
+constexpr int64_t ANTTIME = 1200000LL;
+constexpr int64_t CALIBRTIME = 255000LL;
+constexpr int64_t FORCE_DELAYTIME = 4000000LL;
 
 void setup()
 {
@@ -96,12 +98,12 @@ void loop()
 {
   using namespace measure_h2o;
 
-  static uint64_t setNextTimeCorrect{ ( 1000ULL * 1000ULL * 21600ULL ) };
-  static uint64_t nextTimeToDisplayValues = DELAYTIME;
-  static uint64_t nextTimeHartbeat = HARTBEATTIME;
-  static uint64_t nextAntTime = ANTTIME;
-  static uint64_t nextTimeCalibrCheck = CALIBRTIME;
-  static uint64_t nextTimePanicReboot{ 0 };
+  static int64_t setNextTimeCorrect{ ( 1000LL * 1000LL * 21600LL ) };
+  static int64_t nextTimeToDisplayValues = DELAYTIME;
+  static int64_t nextTimeHartbeat = HARTBEATTIME;
+  static int64_t nextAntTime = ANTTIME;
+  static int64_t nextTimeCalibrCheck = CALIBRTIME;
+  static int64_t nextTimePanicReboot{ 0 };
   static bool antMarkShow{ false };
   uint64_t nowTime = esp_timer_get_time();
 
@@ -182,11 +184,14 @@ void loop()
  */
 time_t getNtpTime()
 {
-  struct tm ti;
-  if ( getLocalTime( &ti ) )
+  if ( prefs::AppStati::getWlanState() == prefs::WlanState::TIMESYNCED )
   {
-    setTime( ti.tm_hour, ti.tm_min, ti.tm_sec, ti.tm_mday, ti.tm_mon + 1, ti.tm_year + 1900 );
-    return now();
+    struct tm ti;
+    if ( getLocalTime( &ti ) )
+    {
+      setTime( ti.tm_hour, ti.tm_min, ti.tm_sec, ti.tm_mday, ti.tm_mon + 1, ti.tm_year + 1900 );
+      return now();
+    }
   }
   return 0;
 }
@@ -201,16 +206,23 @@ void correctTime()
   // somtimes correct elog time
   //
   elog.log( DEBUG, "main: logger time correction..." );
-  struct tm ti;
-  if ( !getLocalTime( &ti ) )
+  if ( prefs::AppStati::getWlanState() == prefs::WlanState::TIMESYNCED )
   {
-    elog.log( WARNING, "main: failed to obtain system time!" );
+    struct tm ti;
+    if ( !getLocalTime( &ti ) )
+    {
+      elog.log( WARNING, "main: failed to obtain system time!" );
+    }
+    else
+    {
+      elog.log( DEBUG, "main: gotten system time!" );
+      Elog::provideTime( ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec );
+      elog.log( DEBUG, "main: logger time correction...OK" );
+    }
   }
   else
   {
-    elog.log( DEBUG, "main: gotten system time!" );
-    Elog::provideTime( ti.tm_year + 1900, ti.tm_mon + 1, ti.tm_mday, ti.tm_hour, ti.tm_min, ti.tm_sec );
-    elog.log( DEBUG, "main: logger time correction...OK" );
+    elog.log( WARNING, "main: no time sync, no correction!" );
   }
 }
 
@@ -288,37 +300,65 @@ int controlCalibr()
   return 0;
 }
 
+/**
+ * check if the system is online
+ */
 void checkOnlineState()
 {
   using namespace measure_h2o;
-  static WlanState currWLANState{ WlanState::DISCONNECTED };
+  static WlanState oldWLANState{ WlanState::DISCONNECTED };
+  static int64_t timeSyncTimeOut{ prefs::NTP_SYNC_TIMEOUT_YS << 1 };
+  // int64_t nowTime = esp_timer_get_time();
   String msg;
 
-  if ( currWLANState != prefs::AppStati::getWlanState() )
+  //
+  // if an timeout while timeSync
+  //
+  if ( timeSyncTimeOut > 0LL )
   {
-    auto new_connected = prefs::AppStati::getWlanState();
-    if ( currWLANState == WlanState::DISCONNECTED || currWLANState == WlanState::FAILED || currWLANState == WlanState::SEARCHING )
+    if ( timeSyncTimeOut < esp_timer_get_time() )
+    {
+      String msg = "Timesync Err!";
+      display->printAlert( msg );
+      elog.log( CRITICAL, "main: no time sync restart Controller!" );
+      delay(5000);
+      ESP.restart();
+    }
+  }
+  //
+  // has online state changed?
+  //
+  if ( oldWLANState != prefs::AppStati::getWlanState() )
+  {
+    auto newWLANState = prefs::AppStati::getWlanState();
+    //
+    // yes state changed
+    //
+    if ( oldWLANState == WlanState::DISCONNECTED || oldWLANState == WlanState::FAILED || oldWLANState == WlanState::SEARCHING )
     {
       //
-      // system was not connected
-      // was not functional for webservice
+      // system was not connected before
+      // was not functional for webservice before
       //
-      if ( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED )
+      if ( newWLANState == WlanState::CONNECTED || newWLANState == WlanState::TIMESYNCED )
       {
         // system is now connected
-        if ( new_connected == WlanState::CONNECTED )
+        if ( newWLANState == WlanState::CONNECTED )
         {
           // connected but not time synced
           msg = "WiFi verbunden!";
           display->printLine( msg );
           msg = "Warte auf TIME";
           display->printLine( msg );
+          // 20 sec timeout für timesync
+          timeSyncTimeOut = esp_timer_get_time() + prefs::NTP_SYNC_TIMEOUT_YS;
         }
         else
         {
           // connected AND time synced
           msg = "Zeit sync OK!";
           display->printLine( msg );
+          timeSyncTimeOut = 0LL;
         }
         //
         // new connection, start webservice
@@ -329,48 +369,37 @@ void checkOnlineState()
       }
       else
       {
+        //
+        // system is now disconnected
+        //
         msg = "WiFi getrennt!";
         display->printLine( msg );
         elog.log( WARNING, "main: ip connectivity lost!" );
-        //
-        // reinit WIFI
-        //
-        // delay( 500 );
-        // elog.log( WARNING, "main: stop webserver..." );
-        // APIWebServer::stop();
-        // elog.log( WARNING, "main: stop webserver...OK" );
-        // elog.log( WARNING, "main: try to reconnect..." );
-        // WifiConfig::reInit();
+        timeSyncTimeOut = 0LL;
       }
     }
     else
     {
       //
-      // was functional for webservice
+      // was functional for webservice before
       //
-      if ( !( new_connected == WlanState::CONNECTED || new_connected == WlanState::TIMESYNCED ) )
+      if ( !( newWLANState == WlanState::CONNECTED || newWLANState == WlanState::TIMESYNCED ) )
       {
         //
         // not longer functional
         //
         msg = "WiFi getrennt!";
         display->printLine( msg );
-        //
-        // reinit WIFI
-        //
-        // delay( 500 );
-        // elog.log( WARNING, "main: try to reconnect..." );
-        // WifiConfig::reInit();
-        // elog.log( WARNING, "main: stop webserver..." );
-        // APIWebServer::stop();
-        // elog.log( WARNING, "main: stop webserver...OK" );
       }
     }
     // mark new value
-    currWLANState = new_connected;
+    oldWLANState = newWLANState;
   }
 }
 
+/**
+ * update the display
+ */
 void updateDisplay()
 {
   using namespace measure_h2o;
@@ -393,7 +422,8 @@ void updateDisplay()
 #endif
     if ( esp_timer_get_time() > nextTimeToForceShowPresure )
     {
-      if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
+      sntp_sync_status_t tsyncStatus = sntp_get_sync_status();
+      if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED || SNTP_SYNC_STATUS_IN_PROGRESS == tsyncStatus )
       {
         struct tm ti;
         if ( getLocalTime( &ti ) )
@@ -404,8 +434,11 @@ void updateDisplay()
             hour = ti.tm_hour;
             minute = ti.tm_min;
             count = 0;
-            char buffer[ 6 ];
-            snprintf( buffer, 6, "%02d:%02d", ti.tm_hour, ti.tm_min );
+            char buffer[ 12 ];
+            if ( SNTP_SYNC_STATUS_IN_PROGRESS == tsyncStatus )
+              snprintf( buffer, 8, "*%02d:%02d*", ti.tm_hour, ti.tm_min );
+            else
+              snprintf( buffer, 6, "%02d:%02d", ti.tm_hour, ti.tm_min );
             String timeStr( buffer );
             display->printTime( timeStr );
           }
@@ -414,6 +447,8 @@ void updateDisplay()
       }
       else
       {
+        if ( SNTP_SYNC_STATUS_COMPLETED == tsyncStatus )
+          prefs::AppStati::setWlanState( WlanState::TIMESYNCED );
         display->printTime( "--:--" );
       }
     }

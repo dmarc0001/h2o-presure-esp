@@ -58,13 +58,13 @@ namespace measure_h2o
    */
   void FileService::sTask( void * )
   {
-    static uint64_t nextTimeToCheck = prefs::FILE_TASK_DELAY_YS;
-    static uint64_t nextSystemFsCheck = esp_timer_get_time() + prefs::FILE_SYSTEM_SIZE_CHECK_YS;
-    static uint64_t nextTimeToFSCheck = esp_timer_get_time() + prefs::FILE_TASK_CHECK_DELAY_YS;
+    static int64_t nextTimeToCheck = prefs::FILE_TASK_DELAY_YS;
+    static int64_t nextSystemFsCheck = esp_timer_get_time() + prefs::FILE_SYSTEM_SIZE_CHECK_YS;
+    static int64_t nextTimeToFSCheck = esp_timer_get_time() + prefs::FILE_TASK_CHECK_DELAY_YS;
 
     while ( true )
     {
-      uint64_t nowTime = esp_timer_get_time();
+      int64_t nowTime = esp_timer_get_time();
 
       if ( nowTime > nextSystemFsCheck )
       {

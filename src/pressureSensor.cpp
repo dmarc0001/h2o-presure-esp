@@ -11,7 +11,7 @@ namespace measure_h2o
   const char *PrSensor::tag{ "PrSensor" };
   gpio_num_t PrSensor::adcPin{ prefs::PRESSURE_GPIO };
   volatile bool PrSensor::pauseMeasureTask{ false };
-  uint64_t PrSensor::interval_ys{ prefs::MEASURE_DIFF_TIME_S * 1000000ULL };
+  int64_t PrSensor::interval_ys{ prefs::MEASURE_DIFF_TIME_S * 1000000ULL };
 
   TaskHandle_t PrSensor::taskHandle{ nullptr };
 
@@ -25,7 +25,7 @@ namespace measure_h2o
     adcAttachPin( PrSensor::adcPin );
     analogSetAttenuation( ADC_11db );
     analogReadResolution( prefs::PRESSURE_RES );
-    PrSensor::interval_ys = ( prefs::AppStati::getMeasureInterval_s() * 1000000ULL );
+    PrSensor::interval_ys = ( static_cast<int64_t>(prefs::AppStati::getMeasureInterval_s()) * 1000000LL );
     PrSensor::start();
     elog.log( DEBUG, "%s: init pressure measure object...OK", PrSensor::tag );
   }
@@ -125,7 +125,7 @@ namespace measure_h2o
    */
   void PrSensor::mTask( void * )
   {
-    static uint64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_S * 1000000ULL;
+    static int64_t nextTimeToMeasure = prefs::MEASURE_DIFF_TIME_S * 1000000LL;
 
     while ( true )
     {

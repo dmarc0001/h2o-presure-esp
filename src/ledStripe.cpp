@@ -71,16 +71,16 @@ namespace measure_h2o
    */
   void MLED::lTask( void * )
   {
-    static uint64_t nextTimeToCheck = prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL;
-    static uint64_t nextTimeToMeasureLED = prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL;
-    static uint64_t nextTimeToHTTPLED = prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL;
+    static int64_t nextTimeToCheck = prefs::LED_CHECK_DIFF_TIME_MS * 1000LL;
+    static int64_t nextTimeToMeasureLED = prefs::LED_CHECK_DIFF_TIME_MS * 1000LL;
+    static int64_t nextTimeToHTTPLED = prefs::LED_CHECK_DIFF_TIME_MS * 1000LL;
     static WlanState wlState = WlanState::DISCONNECTED;
     static bool measureShow{ false };
     static bool httpStateShow{ false };
     static bool configPortalMarker{ false };
 
     elog.log( INFO, "%s: LED Task started...", MLED::tag );
-    uint64_t now = esp_timer_get_time();
+    int64_t now = esp_timer_get_time();
 
     while ( true )
     {
@@ -88,7 +88,7 @@ namespace measure_h2o
       //
       if ( now > nextTimeToCheck )
       {
-        nextTimeToCheck = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL );
+        nextTimeToCheck = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000LL );
         //
         // if config portal running
         //
@@ -161,14 +161,14 @@ namespace measure_h2o
           measureShow = true;
           prefs::AppStati::wasMeasure = false;
           ledStripe.setPixelColor( prefs::LED_MEASURESTATE, prefs::LED_COLOR_MEASURE_ACTICE );
-          nextTimeToMeasureLED = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000ULL * 3ULL );
+          nextTimeToMeasureLED = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 1000LL * 3LL );
         }
         if ( prefs::AppStati::httpActive )
         {
           httpStateShow = true;
           prefs::AppStati::httpActive = false;
           ledStripe.setPixelColor( prefs::LED_HTTP_ACTIVE, prefs::LED_COLOR_HTTP_ACCESS );
-          nextTimeToHTTPLED = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 500ULL );
+          nextTimeToHTTPLED = now + ( prefs::LED_CHECK_DIFF_TIME_MS * 500LL );
         }
         ledStripe.show();
       }

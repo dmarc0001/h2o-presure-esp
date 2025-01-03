@@ -7,9 +7,7 @@ namespace measure_h2o
 {
 
   const char *WifiConfig::tag{ "WifiConfig" };
-  bool WifiConfig::is_sntp_init{ false };
   WiFiManager WifiConfig::wm;
-  // WiFiManagerParameter WifiConfig::custom_field;
 
   /**
    * initialize the static object
@@ -17,29 +15,20 @@ namespace measure_h2o
   void WifiConfig::init()
   {
     char hostname[ 32 ];
-    // elog.log( INFO, "%s: initialize wifi...", WifiConfig::tag );
     uint16_t chip = static_cast< uint16_t >( ESP.getEfuseMac() >> 32 );
     snprintf( hostname, 32, "%s-%08X", prefs::DEFAULT_HOSTNAME, chip );
     WiFi.setHostname( hostname );
     WiFi.mode( WIFI_STA );
     WiFi.onEvent( WifiConfig::wifiEventCallback );
-    // reset settings - wipe credentials for testing
-    // wm.resetSettings();
-    // WifiConfig::wm.setConfigPortalBlocking( false );
     WifiConfig::wm.setConfigPortalBlocking( true );
-    WifiConfig::wm.setConnectTimeout( 25 );
-    WifiConfig::wm.setConfigPortalTimeout( 180 );        // 2 minutes up to auto connect again
+    WifiConfig::wm.setConnectTimeout( 10 );
+#ifdef BUILD_DEBUG
+    WifiConfig::wm.setConfigPortalTimeout( 90 );  // 90s minutes up to auto connect again
+#else
+    WifiConfig::wm.setConfigPortalTimeout( 180 );  // 2 minutes up to auto connect again
+#endif
     WifiConfig::wm.setConnectRetries( 5 );               // retry 5 times to reconnect
     WifiConfig::wm.setAPCallback( configModeCallback );  // callback when manager starts
-    //
-    // esp32 time config
-    // BUG: timezone not work, using gmt offset
-    configTime( prefs::AppStati::getTimezoneOffset(), 0, prefs::NTP_POOL_00, prefs::NTP_POOL_01 );
-    // the old way...
-    // sntp_set_sync_mode( SNTP_SYNC_MODE_IMMED );
-    // sntp_setoperatingmode( SNTP_OPMODE_POLL );
-    // sntp_setservername( 1, "pool.ntp.org" );
-
     //
     // set an callback for my reasons
     //
@@ -50,7 +39,7 @@ namespace measure_h2o
   void WifiConfig::reInit()
   {
     elog.log( INFO, "%s: initialize wifi...", WifiConfig::tag );
-    prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
+    prefs::AppStati::setWlanState( WlanState::SEARCHING );
     String msg = "verbinde WiFi...";
     display->printLine( msg );
     if ( !WifiConfig::wm.autoConnect( prefs::WIFI_CONFIG_AP, prefs::WIFI_CONFIG_PASS ) )
@@ -67,11 +56,21 @@ namespace measure_h2o
     display->printLine( msg );
     elog.log( INFO, "%s: wifi connected...", WifiConfig::tag );
     prefs::AppStati::setWlanState( WlanState::CONNECTED );
-    elog.log( DEBUG, "%s: try to sync time...", WifiConfig::tag );
-    sntp_init();
-    WifiConfig::is_sntp_init = true;
+    WifiConfig::timeResync();
     WifiConfig::wm.stopWebPortal();
     elog.log( INFO, "%s: initialize wifi...OK", WifiConfig::tag );
+  }
+
+  /**
+   * sync or resync time if wifi connected
+   */
+  void WifiConfig::timeResync()
+  {
+    if ( prefs::AppStati::getWlanState() == WlanState::CONNECTED || prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
+    {
+      elog.log( INFO, "%s: wifi connected, try to (re)sync time...", WifiConfig::tag );
+      configTime( prefs::AppStati::getTimezoneOffset(), 0, prefs::NTP_POOL_00, prefs::NTP_POOL_01 );
+    }
   }
 
   /**
@@ -87,26 +86,24 @@ namespace measure_h2o
         break;
       case SYSTEM_EVENT_STA_DISCONNECTED:
         elog.log( INFO, "%s: device disconnected from accesspoint...", WifiConfig::tag );
-        prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
+        if ( prefs::AppStati::getWlanState() != WlanState::SEARCHING )
+        {
+          WifiConfig::wm.disconnect();
+          // WiFi.mode( WIFI_OFF );
+          delay( 500 );
+          WifiConfig::reInit();
+        }
         break;
       case SYSTEM_EVENT_STA_GOT_IP:
         elog.log( INFO, "%s: device got ip <%s>...", WifiConfig::tag, WiFi.localIP().toString().c_str() );
         if ( prefs::AppStati::getWlanState() == WlanState::DISCONNECTED )
           prefs::AppStati::setWlanState( WlanState::CONNECTED );
-        // sntp_init();
-        if ( WifiConfig::is_sntp_init )
-          sntp_restart();
-        else
-        {
-          sntp_init();
-          WifiConfig::is_sntp_init = true;
-        }
+        WifiConfig::timeResync();
         break;
       case SYSTEM_EVENT_STA_LOST_IP:
         elog.log( INFO, "%s: device lost ip...", WifiConfig::tag );
         prefs::AppStati::setWlanState( WlanState::DISCONNECTED );
-        sntp_stop();
-        WifiConfig::is_sntp_init = false;
+        WifiConfig::reInit();
         break;
       case SYSTEM_EVENT_AP_STACONNECTED:
         elog.log( INFO, "%s: WIFI client connected...", WifiConfig::tag );
@@ -115,8 +112,6 @@ namespace measure_h2o
         break;
       case SYSTEM_EVENT_AP_STADISCONNECTED:
         elog.log( INFO, "%s: WIFI client disconnected...", WifiConfig::tag );
-        sntp_stop();
-        WifiConfig::is_sntp_init = false;
         break;
       default:
         break;
@@ -155,13 +150,6 @@ namespace measure_h2o
         if ( prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
         {
           prefs::AppStati::setWlanState( WlanState::CONNECTED );
-          if ( WifiConfig::is_sntp_init )
-            sntp_restart();
-          else
-          {
-            sntp_init();
-            WifiConfig::is_sntp_init = true;
-          }
         }
     }
   }
