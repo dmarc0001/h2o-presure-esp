@@ -69,7 +69,7 @@ namespace measure_h2o
     if ( prefs::AppStati::getWlanState() == WlanState::CONNECTED || prefs::AppStati::getWlanState() == WlanState::TIMESYNCED )
     {
       elog.log( INFO, "%s: wifi connected, try to (re)sync time...", WifiConfig::tag );
-      configTime( prefs::AppStati::getTimezoneOffset(), 0, prefs::NTP_POOL_00, prefs::NTP_POOL_01 );
+      configTime( prefs::AppStati::getTimezoneOffset(), 0, prefs::NTP_POOL_00, prefs::NTP_POOL_01, prefs::NTP_POOL_02 );
     }
   }
 

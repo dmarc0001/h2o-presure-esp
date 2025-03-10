@@ -22,8 +22,9 @@ namespace prefs
   constexpr const char *APPNAME = "PRESSURE";                                  //! application name
   constexpr const char *DEFAULT_HOSTNAME = "esp_h2o";                          //! default hostname
   constexpr int64_t NTP_SYNC_TIMEOUT_YS = 20LL * 1000000LL;                    //! timeout for NTP Sync
-  constexpr const char *NTP_POOL_01{ "pool.ntp.org" };                         //! ntp pool
-  constexpr const char *NTP_POOL_00{ "de.pool.ntp.org" };                      //! ntp pool
+  constexpr const char *NTP_POOL_00{ "fritz.box" };                            //! ntp avm
+  constexpr const char *NTP_POOL_01{ "de.pool.ntp.org" };                      //! ntp pool
+  constexpr const char *NTP_POOL_02{ "pool.ntp.org" };                         //! ntp pool
   constexpr int LED_NUM = 4;                                                   //! led count
   constexpr gpio_num_t LED_PIN = GPIO_NUM_7;                                   //! LED Stripe PIN
   constexpr int LED_LAN = 0;                                                   //! LED for WLAN STATE
